@@ -37,5 +37,8 @@ setup(name='pypcode',
 	packages=['pypcode'],
 	package_data={
 		'pypcode': ['pypcode-native.*']
-		}
+		},
+	install_requires=[
+		'cppyy'
+		]
 	)
