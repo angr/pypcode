@@ -125,7 +125,7 @@ SLEIGH_OPT=
 
 # The SLEIGH library is built with console mode objects and it
 # uses the COMMANDLINE_* options
-LIBSLA_NAMES=$(CORE) $(SLEIGH) loadimage sleigh memstate emulate opbehavior
+LIBSLA_NAMES=$(CORE) $(SLEIGH) loadimage memstate emulate opbehavior
 
 # The Decompiler library is built with console mode objects and it uses the COMMANDLINE_* options
 LIBDECOMP_NAMES=$(CORE) $(DECCORE) $(EXTRA) $(SLEIGH)
