@@ -37,12 +37,12 @@ CC=gcc
 CXX=g++
 
 # Debug flags
-DBG_CXXFLAGS=-g -Wall -Wno-sign-compare
+DBG_CXXFLAGS=-g -Wall -Wno-sign-compare $(CFLAGS)
 #DBG_CXXFLAGS=-g -pg -Wall -Wno-sign-compare
 #DBG_CXXFLAGS=-g -fprofile-arcs -ftest-coverage -Wall -Wno-sign-compare
 
 # Optimization flags
-OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare
+OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare $(CFLAGS)
 
 YACC=bison
 
