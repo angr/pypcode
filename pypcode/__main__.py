@@ -87,7 +87,6 @@ def main():
   # we can set the default context
   context.setVariableDefault("addrsize",1) # Address size is 32-bit
   context.setVariableDefault("opsize",1) # Operand size is 32-bit
-  
 
   emit = PcodeRawOutHelper(trans) # Set up the pcode dumper
   asm = AssemblyEmitCacher() # Set up the disassembly dumper
