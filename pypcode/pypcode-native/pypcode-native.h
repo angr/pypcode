@@ -11,6 +11,7 @@ class SimpleLoadImage : public LoadImage {
   uint1 *data;
 public:
   SimpleLoadImage(uintb ad,uint1 *ptr,int4 sz) : LoadImage("nofile") { baseaddr = ad; data = ptr; length = sz; }
+  void setData(uintb ad,uint1 *ptr,int4 sz) { baseaddr = ad; data = ptr; length = sz; }
   virtual void loadFill(uint1 *ptr,int4 size,const Address &addr);
   virtual string getArchType(void) const { return "myload"; }
   virtual void adjustVma(long adjust) { }
@@ -30,6 +31,10 @@ public:
   }
   void clearCache(void);
   virtual void dump(const Address &addr,OpCode opc,VarnodeData *outvar,VarnodeData *vars,int4 isize);
+
+
+  // FIXME: Lifetime of PcodeRawOutHelper is handled on Python side, but need
+  // to add destructor to cleanup opcache/varcache on delete. 
 };
 
 #endif

@@ -31,3 +31,4 @@ from cppyy.gbl import get_opname
 from cppyy.gbl import PcodeRawOutHelper
 from cppyy.gbl import SimpleLoadImage
 from cppyy.gbl import Sleigh
+from cppyy.gbl import OpCode
