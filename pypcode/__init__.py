@@ -15,6 +15,8 @@ SLEIGH_SPECFILES_PATH=os.path.join(SLEIGH_PATH, 'specfiles')
 
 log.debug('Loading Library')
 cppyy.include(os.path.join(PYPCODENATIVE_PATH, 'pypcode-native.h'))
+cppyy.include(os.path.join(SLEIGH_SRC_PATH, 'translate.hh'))
+cppyy.include(os.path.join(SLEIGH_SRC_PATH, 'error.hh'))
 cppyy.load_library(os.path.join(PYPCODENATIVE_PATH, 'pypcode-native.so'))
 
 class AssemblyEmitCacher(cppyy.gbl.AssemblyEmit):
@@ -25,6 +27,7 @@ class AssemblyEmitCacher(cppyy.gbl.AssemblyEmit):
 
 # Import names into this namespace
 from cppyy.gbl import Address
+from cppyy.gbl import AddrSpace
 from cppyy.gbl import ContextInternal
 from cppyy.gbl import DocumentStorage
 from cppyy.gbl import get_opname
