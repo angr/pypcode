@@ -1,0 +1,16 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  Ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone Tree
+      uses: actions/checkout@v2
+    - name: Install Dependencies
+      run: |
+        python3 -m pip install -U pip setuptools
+    - name: Install
+      run: |
+        python3 -m pip install --user .
