@@ -56,7 +56,7 @@ def main():
     ])
 
   start = 0x80483b4
-  stop = start + len(code)
+  stop = 0x804846c
 
   log.debug('Loading image')
   loader = SimpleLoadImage(start, code, len(code))
