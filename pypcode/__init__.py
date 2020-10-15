@@ -30,8 +30,11 @@ from cppyy.gbl import Address
 from cppyy.gbl import AddrSpace
 from cppyy.gbl import ContextInternal
 from cppyy.gbl import DocumentStorage
+from cppyy.gbl import Element
 from cppyy.gbl import get_opname
 from cppyy.gbl import PcodeRawOutHelper
 from cppyy.gbl import SimpleLoadImage
 from cppyy.gbl import Sleigh
 from cppyy.gbl import OpCode
+from cppyy.gbl import VarnodeData
+from cppyy.gbl import PcodeOpRaw
