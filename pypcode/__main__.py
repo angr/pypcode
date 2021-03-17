@@ -90,8 +90,8 @@ def main():
 
   emit = PcodeRawOutHelper(trans) # Set up the pcode dumper
   asm = AssemblyEmitCacher() # Set up the disassembly dumper
-  addr = Address(trans.getDefaultSpace(), start) # First address to translate
-  lastaddr = Address(trans.getDefaultSpace(), stop) # Last address
+  addr = Address(trans.getDefaultCodeSpace(), start) # First address to translate
+  lastaddr = Address(trans.getDefaultCodeSpace(), stop) # Last address
 
   if action == "disassemble":
     while addr < lastaddr:
