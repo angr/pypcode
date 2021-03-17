@@ -39,6 +39,6 @@ setup(name='pypcode',
 		'pypcode': ['pypcode-native.*']
 		},
 	install_requires=[
-		'cppyy'
+		'cppyy==1.8.0' # FIXME: Segfault in cppyy 1.9.3
 		]
 	)
