@@ -1,8 +1,8 @@
 #ifndef PYPCODE_NATIVE_H
 #define PYPCODE_NATIVE_H
 
-#include "sleigh-2.1.0/src/loadimage.hh"
-#include "sleigh-2.1.0/src/sleigh.hh"
+#include "sleigh/loadimage.hh"
+#include "sleigh/sleigh.hh"
 
 // This is a tiny LoadImage class which feeds the executable bytes to the translator
 class SimpleLoadImage : public LoadImage {
@@ -34,7 +34,7 @@ public:
 
 
   // FIXME: Lifetime of PcodeRawOutHelper is handled on Python side, but need
-  // to add destructor to cleanup opcache/varcache on delete. 
+  // to add destructor to cleanup opcache/varcache on delete.
 };
 
 #endif
