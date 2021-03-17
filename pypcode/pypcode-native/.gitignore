@@ -1,3 +1,7 @@
-sleigh-2.1.0/src/com_opt/
-sleigh-2.1.0/src/libsla.a
+sleigh/com_opt/
+sleigh/libsla.a
 pypcode-native.so
+*.java
+Module.manifest
+build.gradle
+certification.manifest
