@@ -5,3 +5,6 @@ pypcode-native.so
 Module.manifest
 build.gradle
 certification.manifest
+*.sla
+sleigh/sla_opt
+sleigh/sleigh_opt
