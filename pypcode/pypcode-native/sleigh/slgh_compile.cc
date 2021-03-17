@@ -1865,7 +1865,7 @@ void SleighCompile::process(void)
 
 {				// Do all post processing on the parsed data structures
   checkNops();
-  if (getDefaultSpace() == (AddrSpace *)0)
+  if (getDefaultCodeSpace() == (AddrSpace *)0)
     reportError("No default space specified");
   if (errors>0) return;
   checkConsistency();
@@ -1987,7 +1987,7 @@ bool SleighCompile::undefinePreprocValue(const string &nm)
 
 // Functions needed by the parser
 
-TokenSymbol *SleighCompile::defineToken(string *name,uintb *sz)
+TokenSymbol *SleighCompile::defineToken(string *name,uintb *sz,int4 endian)
 
 {
   uint4 size = *sz;
@@ -1998,7 +1998,12 @@ TokenSymbol *SleighCompile::defineToken(string *name,uintb *sz)
   }
   else
     size = size/8;
-  Token *newtoken = new Token(*name,size,isBigEndian(),tokentable.size());
+  bool isBig;
+  if (endian ==0)
+    isBig = isBigEndian();
+  else
+    isBig = (endian > 0);
+  Token *newtoken = new Token(*name,size,isBig,tokentable.size());
   tokentable.push_back(newtoken);
   delete name;
   TokenSymbol *res = new TokenSymbol(newtoken);
@@ -2037,10 +2042,10 @@ void SleighCompile::newSpace(SpaceQuality *qual)
   AddrSpace *spc = new AddrSpace(this,this,IPTR_PROCESSOR,qual->name,qual->size,qual->wordsize,numSpaces(),AddrSpace::hasphysical,delay);
   insertSpace(spc);
   if (qual->isdefault) {
-    if (getDefaultSpace() != (AddrSpace *)0)
-      reportError(getCurrentLocation(), "Multiple default spaces -- '" + getDefaultSpace()->getName() + "', '" + qual->name + "'");
+    if (getDefaultCodeSpace() != (AddrSpace *)0)
+      reportError(getCurrentLocation(), "Multiple default spaces -- '" + getDefaultCodeSpace()->getName() + "', '" + qual->name + "'");
     else {
-      setDefaultSpace(spc->getIndex());	// Make the flagged space the default
+      setDefaultCodeSpace(spc->getIndex());	// Make the flagged space the default
       pcode.setDefaultSpace(spc);
     }
   }

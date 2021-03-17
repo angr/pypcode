@@ -181,7 +181,9 @@ aligndef: DEFINE_KEY ALIGN_KEY '=' INTEGER ';' { slgh->setAlignment(*$4); delete
   ;
 tokendef: tokenprop ';'                {}
   ;
-tokenprop: DEFINE_KEY TOKEN_KEY STRING '(' INTEGER ')' { $$ = slgh->defineToken($3,$5); }
+tokenprop: DEFINE_KEY TOKEN_KEY STRING '(' INTEGER ')' { $$ = slgh->defineToken($3,$5,0); }
+  | DEFINE_KEY TOKEN_KEY STRING '(' INTEGER ')' ENDIAN_KEY '=' LITTLE_KEY { $$ = slgh->defineToken($3,$5,-1); }
+  | DEFINE_KEY TOKEN_KEY STRING '(' INTEGER ')' ENDIAN_KEY '=' BIG_KEY { $$ = slgh->defineToken($3,$5,1); }
   | tokenprop fielddef		       { $$ = $1; slgh->addTokenField($1,$2); }
   | DEFINE_KEY TOKEN_KEY anysymbol     { string errmsg=$3->getName()+": redefined as a token"; yyerror(errmsg.c_str()); YYERROR; }
   ;
@@ -449,8 +451,8 @@ expr: varnode { $$ = new ExprTree($1); }
   ;  
 sizedstar: '*' '[' SPACESYM ']' ':' INTEGER { $$ = new StarQuality; $$->size = *$6; delete $6; $$->id=ConstTpl($3->getSpace()); }
   | '*' '[' SPACESYM ']'	{ $$ = new StarQuality; $$->size = 0; $$->id=ConstTpl($3->getSpace()); }
-  | '*' ':' INTEGER		{ $$ = new StarQuality; $$->size = *$3; delete $3; $$->id=ConstTpl(slgh->getDefaultSpace()); }
-  | '*'				{ $$ = new StarQuality; $$->size = 0; $$->id=ConstTpl(slgh->getDefaultSpace()); }
+  | '*' ':' INTEGER		{ $$ = new StarQuality; $$->size = *$3; delete $3; $$->id=ConstTpl(slgh->getDefaultCodeSpace()); }
+  | '*'				{ $$ = new StarQuality; $$->size = 0; $$->id=ConstTpl(slgh->getDefaultCodeSpace()); }
   ;
 jumpdest: STARTSYM		{ VarnodeTpl *sym = $1->getVarnode(); $$ = new VarnodeTpl(ConstTpl(ConstTpl::j_curspace),sym->getOffset(),ConstTpl(ConstTpl::j_curspace_size)); delete sym; }
   | ENDSYM			{ VarnodeTpl *sym = $1->getVarnode(); $$ = new VarnodeTpl(ConstTpl(ConstTpl::j_curspace),sym->getOffset(),ConstTpl(ConstTpl::j_curspace_size)); delete sym; }

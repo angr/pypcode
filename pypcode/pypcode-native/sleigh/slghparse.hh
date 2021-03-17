@@ -1,3 +1,18 @@
+/* ###
+ * IP: GHIDRA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /* A Bison parser, made by GNU Bison 3.0.4.  */
 
 /* Bison interface for Yacc-like parsers in C
@@ -30,8 +45,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_SLGHPARSE_HH_INCLUDED
-# define YY_YY_SLGHPARSE_HH_INCLUDED
+#ifndef YY_YY_SRC_DECOMPILE_CPP_SLGHPARSE_HH_INCLUDED
+# define YY_YY_SRC_DECOMPILE_CPP_SLGHPARSE_HH_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -164,7 +179,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 29 "slghparse.y" /* yacc.c:1909  */
+#line 29 "src/decompile/cpp/slghparse.y" /* yacc.c:1909  */
 
   char ch;
   uintb *i;
@@ -208,7 +223,7 @@ union YYSTYPE
   FamilySymbol *famsym;
   SpecificSymbol *specsym;
 
-#line 212 "slghparse.hh" /* yacc.c:1909  */
+#line 212 "src/decompile/cpp/slghparse.hh" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -221,4 +236,4 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_SLGHPARSE_HH_INCLUDED  */
+#endif /* !YY_YY_SRC_DECOMPILE_CPP_SLGHPARSE_HH_INCLUDED  */
