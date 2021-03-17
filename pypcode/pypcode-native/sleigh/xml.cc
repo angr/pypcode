@@ -1,3 +1,18 @@
+/* ###
+ * IP: GHIDRA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /* A Bison parser, made by GNU Bison 3.0.4.  */
 
 /* Bison implementation for Yacc-like parsers in C
@@ -70,7 +85,7 @@
 #define yychar          xmlchar
 
 /* Copy the first part of user declarations.  */
-#line 16 "xml.y" /* yacc.c:339  */
+#line 16 "src/decompile/cpp/xml.y" /* yacc.c:339  */
 
 #include "xml.hh"
 // CharData mode   look for '<' '&' or "]]>"
@@ -83,11 +98,20 @@
 #include <iostream>
 #include <string>
 
+string Attributes::bogus_uri("http://unused.uri");
+
+/// \brief The XML character scanner
+///
+/// Tokenize a byte stream suitably for the main XML parser.  The scanner expects an ASCII or UTF-8
+/// encoding.  Characters is XML tag and attribute names are restricted to ASCII "letters", but
+/// extended UTF-8 characters can be used in any other character data: attribute values, content, comments. 
 class XmlScan {
 public:
+  /// \brief Modes of the scanner
   enum mode { CharDataMode, CDataMode, AttValueSingleMode,
 	      AttValueDoubleMode, CommentMode, CharRefMode,
 	      NameMode, SNameMode, SingleMode };
+  /// \brief Additional tokens returned by the scanner, in addition to byte values 00-ff
   enum token { CharDataToken = 258,
 	       CDataToken = 259,
 	       AttValueToken = 260,
@@ -98,13 +122,19 @@ public:
 	       ElementBraceToken = 265,
 	       CommandBraceToken = 266 };
 private:
-  mode curmode;
-  istream &s;
-  string *lvalue;		// Current string being built
-  int4 lookahead[4];
-  int4 pos;
-  bool endofstream;		// Has end of stream been reached
-  void clearlvalue(void);
+  mode curmode;			///< The current scanning mode
+  istream &s;			///< The stream being scanned
+  string *lvalue;		///< Current string being built
+  int4 lookahead[4];	///< Lookahead into the byte stream
+  int4 pos;				///< Current position in the lookahead buffer
+  bool endofstream;		///< Has end of stream been reached
+  void clearlvalue(void);	///< Clear the current token string
+
+  /// \brief Get the next byte in the stream
+  ///
+  /// Maintain a lookahead of 4 bytes at all times so that we can check for special
+  /// XML character sequences without consuming.
+  /// \return the next byte value as an integer
   int4 getxmlchar(void) {
     char c;	    
     int4 ret=lookahead[pos];
@@ -122,42 +152,43 @@ private:
     pos = (pos+1)&3;
     return ret;
   }
-  int4 next(int4 i) { return lookahead[(pos+i)&3]; }
-  bool isLetter(int4 val) { return (((val>=0x41)&&(val<=0x5a))||((val>=0x61)&&(val<=0x7a))); }
-  bool isInitialNameChar(int4 val);			  
-  bool isNameChar(int4 val);
-  bool isChar(int4 val);
-  int4 scanSingle(void);
-  int4 scanCharData(void);
-  int4 scanCData(void);
-  int4 scanAttValue(int4 quote);
-  int4 scanCharRef(void);
-  int4 scanComment(void);
-  int4 scanName(void);
-  int4 scanSName(void);
+  int4 next(int4 i) { return lookahead[(pos+i)&3]; }	///< Peek at the next (i-th) byte without consuming
+  bool isLetter(int4 val) { return (((val>=0x41)&&(val<=0x5a))||((val>=0x61)&&(val<=0x7a))); }	///< Is the given byte a \e letter
+  bool isInitialNameChar(int4 val);		///< Is the given byte/character the valid start of an XML name
+  bool isNameChar(int4 val);			///< Is the given byte/character valid for an XML name	
+  bool isChar(int4 val);				///< Is the given byte/character valid as an XML character
+  int4 scanSingle(void);				///< Scan for the next token in Single Character mode
+  int4 scanCharData(void);				///< Scan for the next token is Character Data mode
+  int4 scanCData(void);					///< Scan for the next token in CDATA mode
+  int4 scanAttValue(int4 quote);		///< Scan for the next token in Attribute Value mode
+  int4 scanCharRef(void);				///< Scan for the next token in Character Reference mode
+  int4 scanComment(void);				///< Scan for the next token in Comment mode
+  int4 scanName(void);					///< Scan a Name or return single non-name character
+  int4 scanSName(void);					///< Scan Name, allow white space before
 public:
-  XmlScan(istream &t);
-  ~XmlScan(void);
-  void setmode(mode m) { curmode = m; }
-  int4 nexttoken(void);		// Interface for bison
-  string *lval(void) { string *ret = lvalue; lvalue = (string *)0; return ret; }
+  XmlScan(istream &t);					///< Construct scanner given a stream
+  ~XmlScan(void);						///< Destructor
+  void setmode(mode m) { curmode = m; }	///< Set the scanning mode
+  int4 nexttoken(void);					///< Get the next token
+  string *lval(void) { string *ret = lvalue; lvalue = (string *)0; return ret; }	///< Return the last \e lvalue string
 };
 
+/// \brief A parsed name/value pair
 struct NameValue {
-  string *name;
-  string *value;
+  string *name;		///< The name
+  string *value;	///< The value
 };
 
-extern int yylex(void);
-extern int yyerror(const char *str);
-extern void print_content(const string &str);
-extern int4 convertEntityRef(const string &ref);
-extern int4 convertCharRef(const string &ref);
-static XmlScan *global_scan;
-static ContentHandler *handler;
-extern int yydebug;
+extern int yylex(void);							///< Interface to the scanner
+extern int yyerror(const char *str);			///< Interface for registering an error in parsing
+extern void print_content(const string &str);	///< Send character data to the ContentHandler
+extern int4 convertEntityRef(const string &ref);	///< Convert an XML entity to its equivalent character
+extern int4 convertCharRef(const string &ref);	///< Convert an XML character reference to its equivalent character
+static XmlScan *global_scan;					///< Global reference to the scanner
+static ContentHandler *handler;					///< Global reference to the content handler
+extern int yydebug;								///< Debug mode
 
-#line 161 "xml.cc" /* yacc.c:339  */
+#line 177 "src/decompile/cpp/xml.cc" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -206,14 +237,14 @@ extern int xmldebug;
 
 union YYSTYPE
 {
-#line 103 "xml.y" /* yacc.c:355  */
+#line 119 "src/decompile/cpp/xml.y" /* yacc.c:355  */
 
   int4 i;
   string *str;
   Attributes *attr;
   NameValue *pair;
 
-#line 217 "xml.cc" /* yacc.c:355  */
+#line 233 "src/decompile/cpp/xml.cc" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -230,7 +261,7 @@ int xmlparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 234 "xml.cc" /* yacc.c:358  */
+#line 250 "src/decompile/cpp/xml.cc" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -528,14 +559,14 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   119,   119,   120,   121,   122,   123,   124,   125,   126,
-     128,   129,   130,   131,   132,   133,   134,   135,   136,   137,
-     138,   139,   140,   141,   142,   144,   145,   146,   147,   148,
-     149,   150,   152,   153,   154,   155,   156,   157,   158,   160,
-     161,   162,   163,   164,   165,   166,   168,   169,   171,   172,
-     173,   174,   176,   177,   178,   179,   180,   181,   183,   184,
-     185,   186,   187,   188,   189,   191,   192,   194,   195,   196,
-     197
+       0,   135,   135,   136,   137,   138,   139,   140,   141,   142,
+     144,   145,   146,   147,   148,   149,   150,   151,   152,   153,
+     154,   155,   156,   157,   158,   160,   161,   162,   163,   164,
+     165,   166,   168,   169,   170,   171,   172,   173,   174,   176,
+     177,   178,   179,   180,   181,   182,   184,   185,   187,   188,
+     189,   190,   192,   193,   194,   195,   196,   197,   199,   200,
+     201,   202,   203,   204,   205,   207,   208,   210,   211,   212,
+     213
 };
 #endif
 
@@ -1421,259 +1452,259 @@ yyreduce:
   switch (yyn)
     {
         case 10:
-#line 128 "xml.y" /* yacc.c:1646  */
+#line 144 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = new string; global_scan->setmode(XmlScan::AttValueSingleMode); }
-#line 1427 "xml.cc" /* yacc.c:1646  */
+#line 1443 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 129 "xml.y" /* yacc.c:1646  */
+#line 145 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); *(yyval.str) += *(yyvsp[0].str); delete (yyvsp[0].str); global_scan->setmode(XmlScan::AttValueSingleMode); }
-#line 1433 "xml.cc" /* yacc.c:1646  */
+#line 1449 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 130 "xml.y" /* yacc.c:1646  */
+#line 146 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); *(yyval.str) += (yyvsp[0].i); global_scan->setmode(XmlScan::AttValueSingleMode); }
-#line 1439 "xml.cc" /* yacc.c:1646  */
+#line 1455 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 131 "xml.y" /* yacc.c:1646  */
+#line 147 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = new string; global_scan->setmode(XmlScan::AttValueDoubleMode); }
-#line 1445 "xml.cc" /* yacc.c:1646  */
+#line 1461 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 132 "xml.y" /* yacc.c:1646  */
+#line 148 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); *(yyval.str) += *(yyvsp[0].str); delete (yyvsp[0].str); global_scan->setmode(XmlScan::AttValueDoubleMode); }
-#line 1451 "xml.cc" /* yacc.c:1646  */
+#line 1467 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 133 "xml.y" /* yacc.c:1646  */
+#line 149 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); *(yyval.str) += (yyvsp[0].i); global_scan->setmode(XmlScan::AttValueDoubleMode); }
-#line 1457 "xml.cc" /* yacc.c:1646  */
+#line 1473 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 134 "xml.y" /* yacc.c:1646  */
+#line 150 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); }
-#line 1463 "xml.cc" /* yacc.c:1646  */
+#line 1479 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 135 "xml.y" /* yacc.c:1646  */
+#line 151 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); }
-#line 1469 "xml.cc" /* yacc.c:1646  */
+#line 1485 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 136 "xml.y" /* yacc.c:1646  */
+#line 152 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::NameMode); delete (yyvsp[0].str); }
-#line 1475 "xml.cc" /* yacc.c:1646  */
+#line 1491 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 137 "xml.y" /* yacc.c:1646  */
+#line 153 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::CommentMode); delete (yyvsp[-3].str); }
-#line 1481 "xml.cc" /* yacc.c:1646  */
+#line 1497 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 138 "xml.y" /* yacc.c:1646  */
+#line 154 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { delete (yyvsp[-3].str); }
-#line 1487 "xml.cc" /* yacc.c:1646  */
+#line 1503 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 139 "xml.y" /* yacc.c:1646  */
+#line 155 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { delete (yyvsp[-1].str); yyerror("Processing instructions are not supported"); YYERROR; }
-#line 1493 "xml.cc" /* yacc.c:1646  */
+#line 1509 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 140 "xml.y" /* yacc.c:1646  */
+#line 156 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); }
-#line 1499 "xml.cc" /* yacc.c:1646  */
+#line 1515 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 141 "xml.y" /* yacc.c:1646  */
+#line 157 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::CDataMode); delete (yyvsp[-8].str); }
-#line 1505 "xml.cc" /* yacc.c:1646  */
+#line 1521 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 152 "xml.y" /* yacc.c:1646  */
+#line 168 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { delete (yyvsp[-8].str); yyerror("DTD's not supported"); YYERROR; }
-#line 1511 "xml.cc" /* yacc.c:1646  */
+#line 1527 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 160 "xml.y" /* yacc.c:1646  */
+#line 176 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->setVersion(*(yyvsp[0].str)); delete (yyvsp[0].str); }
-#line 1517 "xml.cc" /* yacc.c:1646  */
+#line 1533 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 161 "xml.y" /* yacc.c:1646  */
+#line 177 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->setEncoding(*(yyvsp[0].str)); delete (yyvsp[0].str); }
-#line 1523 "xml.cc" /* yacc.c:1646  */
+#line 1539 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 168 "xml.y" /* yacc.c:1646  */
+#line 184 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->endElement((yyvsp[0].attr)->getelemURI(),(yyvsp[0].attr)->getelemName(),(yyvsp[0].attr)->getelemName()); delete (yyvsp[0].attr); }
-#line 1529 "xml.cc" /* yacc.c:1646  */
+#line 1545 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 169 "xml.y" /* yacc.c:1646  */
+#line 185 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->endElement((yyvsp[-2].attr)->getelemURI(),(yyvsp[-2].attr)->getelemName(),(yyvsp[-2].attr)->getelemName()); delete (yyvsp[-2].attr); delete (yyvsp[0].str); }
-#line 1535 "xml.cc" /* yacc.c:1646  */
+#line 1551 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 171 "xml.y" /* yacc.c:1646  */
+#line 187 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->startElement((yyvsp[-1].attr)->getelemURI(),(yyvsp[-1].attr)->getelemName(),(yyvsp[-1].attr)->getelemName(),*(yyvsp[-1].attr)); (yyval.attr) = (yyvsp[-1].attr); }
-#line 1541 "xml.cc" /* yacc.c:1646  */
+#line 1557 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 172 "xml.y" /* yacc.c:1646  */
+#line 188 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->startElement((yyvsp[-2].attr)->getelemURI(),(yyvsp[-2].attr)->getelemName(),(yyvsp[-2].attr)->getelemName(),*(yyvsp[-2].attr)); (yyval.attr) = (yyvsp[-2].attr); }
-#line 1547 "xml.cc" /* yacc.c:1646  */
+#line 1563 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 173 "xml.y" /* yacc.c:1646  */
+#line 189 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->startElement((yyvsp[-2].attr)->getelemURI(),(yyvsp[-2].attr)->getelemName(),(yyvsp[-2].attr)->getelemName(),*(yyvsp[-2].attr)); (yyval.attr) = (yyvsp[-2].attr); }
-#line 1553 "xml.cc" /* yacc.c:1646  */
+#line 1569 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 174 "xml.y" /* yacc.c:1646  */
+#line 190 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { handler->startElement((yyvsp[-3].attr)->getelemURI(),(yyvsp[-3].attr)->getelemName(),(yyvsp[-3].attr)->getelemName(),*(yyvsp[-3].attr)); (yyval.attr) = (yyvsp[-3].attr); }
-#line 1559 "xml.cc" /* yacc.c:1646  */
+#line 1575 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 176 "xml.y" /* yacc.c:1646  */
+#line 192 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.attr) = new Attributes((yyvsp[0].str)); global_scan->setmode(XmlScan::SNameMode); }
-#line 1565 "xml.cc" /* yacc.c:1646  */
+#line 1581 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 177 "xml.y" /* yacc.c:1646  */
+#line 193 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.attr) = (yyvsp[-1].attr); (yyval.attr)->add_attribute( (yyvsp[0].pair)->name, (yyvsp[0].pair)->value); delete (yyvsp[0].pair); global_scan->setmode(XmlScan::SNameMode); }
-#line 1571 "xml.cc" /* yacc.c:1646  */
+#line 1587 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 178 "xml.y" /* yacc.c:1646  */
+#line 194 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.pair) = new NameValue; (yyval.pair)->name = (yyvsp[-2].str); (yyval.pair)->value = (yyvsp[0].str); }
-#line 1577 "xml.cc" /* yacc.c:1646  */
+#line 1593 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 179 "xml.y" /* yacc.c:1646  */
+#line 195 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::NameMode); delete (yyvsp[-1].str); }
-#line 1583 "xml.cc" /* yacc.c:1646  */
+#line 1599 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 180 "xml.y" /* yacc.c:1646  */
+#line 196 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); }
-#line 1589 "xml.cc" /* yacc.c:1646  */
+#line 1605 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 181 "xml.y" /* yacc.c:1646  */
+#line 197 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-2].str); }
-#line 1595 "xml.cc" /* yacc.c:1646  */
+#line 1611 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 183 "xml.y" /* yacc.c:1646  */
+#line 199 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::CharDataMode); }
-#line 1601 "xml.cc" /* yacc.c:1646  */
+#line 1617 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 184 "xml.y" /* yacc.c:1646  */
+#line 200 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { print_content( *(yyvsp[0].str) ); delete (yyvsp[0].str); global_scan->setmode(XmlScan::CharDataMode); }
-#line 1607 "xml.cc" /* yacc.c:1646  */
+#line 1623 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 185 "xml.y" /* yacc.c:1646  */
+#line 201 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::CharDataMode); }
-#line 1613 "xml.cc" /* yacc.c:1646  */
+#line 1629 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 186 "xml.y" /* yacc.c:1646  */
+#line 202 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { string *tmp=new string(); *tmp += (yyvsp[0].i); print_content(*tmp); delete tmp; global_scan->setmode(XmlScan::CharDataMode); }
-#line 1619 "xml.cc" /* yacc.c:1646  */
+#line 1635 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 187 "xml.y" /* yacc.c:1646  */
+#line 203 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { print_content( *(yyvsp[0].str) ); delete (yyvsp[0].str); global_scan->setmode(XmlScan::CharDataMode); }
-#line 1625 "xml.cc" /* yacc.c:1646  */
+#line 1641 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 188 "xml.y" /* yacc.c:1646  */
+#line 204 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::CharDataMode); }
-#line 1631 "xml.cc" /* yacc.c:1646  */
+#line 1647 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 189 "xml.y" /* yacc.c:1646  */
+#line 205 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::CharDataMode); }
-#line 1637 "xml.cc" /* yacc.c:1646  */
+#line 1653 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 191 "xml.y" /* yacc.c:1646  */
+#line 207 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.i) = convertEntityRef(*(yyvsp[0].str)); delete (yyvsp[0].str); }
-#line 1643 "xml.cc" /* yacc.c:1646  */
+#line 1659 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 192 "xml.y" /* yacc.c:1646  */
+#line 208 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.i) = convertCharRef(*(yyvsp[0].str)); delete (yyvsp[0].str); }
-#line 1649 "xml.cc" /* yacc.c:1646  */
+#line 1665 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 194 "xml.y" /* yacc.c:1646  */
+#line 210 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::NameMode); }
-#line 1655 "xml.cc" /* yacc.c:1646  */
+#line 1671 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 195 "xml.y" /* yacc.c:1646  */
+#line 211 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { global_scan->setmode(XmlScan::CharRefMode); }
-#line 1661 "xml.cc" /* yacc.c:1646  */
+#line 1677 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 196 "xml.y" /* yacc.c:1646  */
+#line 212 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); }
-#line 1667 "xml.cc" /* yacc.c:1646  */
+#line 1683 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 197 "xml.y" /* yacc.c:1646  */
+#line 213 "src/decompile/cpp/xml.y" /* yacc.c:1646  */
     { (yyval.str) = (yyvsp[-1].str); }
-#line 1673 "xml.cc" /* yacc.c:1646  */
+#line 1689 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
     break;
 
 
-#line 1677 "xml.cc" /* yacc.c:1646  */
+#line 1693 "src/decompile/cpp/xml.cc" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1901,7 +1932,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 198 "xml.y" /* yacc.c:1906  */
+#line 214 "src/decompile/cpp/xml.y" /* yacc.c:1906  */
 
 
 XmlScan::XmlScan(istream &t) : s(t)
@@ -1940,11 +1971,11 @@ int4 XmlScan::scanSingle(void)
 
 int4 XmlScan::scanCharData(void)
 
-{				// look for '<' '&' or ']]>'
+{
   clearlvalue();
   lvalue = new string();
   
-  while(next(0) != -1) {
+  while(next(0) != -1) {		// look for '<' '&' or ']]>'
     if (next(0) == '<') break;
     if (next(0) == '&') break;
     if (next(0) == ']')
@@ -1960,11 +1991,11 @@ int4 XmlScan::scanCharData(void)
 
 int4 XmlScan::scanCData(void)
 
-{				// Look for "]]>" and non-Char
+{
   clearlvalue();
   lvalue = new string();
 
-  while(next(0) != -1) {
+  while(next(0) != -1) {	// Look for "]]>" and non-Char
     if (next(0)==']')
       if (next(1)==']')
 	if (next(2)=='>')
@@ -2041,7 +2072,7 @@ int4 XmlScan::scanComment(void)
 
 int4 XmlScan::scanName(void)
 
-{				// Scan a Name or return single non-name character
+{
   clearlvalue();
   lvalue = new string();
 
@@ -2057,7 +2088,7 @@ int4 XmlScan::scanName(void)
 
 int4 XmlScan::scanSName(void)
 
-{				// Scan Name, allow white space before
+{
   int4 whitecount = 0;
   while((next(0)==' ')||(next(0)=='\n')||(next(0)=='\r')||(next(0)=='\t')) {
     whitecount += 1;
@@ -2278,7 +2309,7 @@ Document *DocumentStorage::parseDocument(istream &s)
 
 Document *DocumentStorage::openDocument(const string &filename)
 
-{ // Open and parse an XML file, return Document object
+{
   ifstream s(filename.c_str());
   if (!s)
     throw XmlError("Unable to open xml document "+filename);
@@ -2289,13 +2320,13 @@ Document *DocumentStorage::openDocument(const string &filename)
 
 void DocumentStorage::registerTag(const Element *el)
 
-{ // Register a tag under its name
+{
   tagmap[el->getName()] = el;
 }
 
 const Element *DocumentStorage::getTag(const string &nm) const
 
-{ // Retrieve a registered tag by name
+{
   map<string,const Element *>::const_iterator iter;
 
   iter = tagmap.find(nm);
@@ -2318,7 +2349,7 @@ Document *xml_tree(istream &i)
 
 void xml_escape(ostream &s,const char *str)
 
-{				// Escape xml tag indicators
+{
   while(*str!='\0') {
     if (*str < '?') {
       if (*str=='<') s << "&lt;";
