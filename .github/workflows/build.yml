@@ -14,3 +14,6 @@ jobs:
     - name: Install
       run: |
         python3 -m pip install --user .
+        cd /tmp
+        python3 -m pypcode pcode
+        python3 -m pypcode disassemble
