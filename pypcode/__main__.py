@@ -67,7 +67,7 @@ def main():
 
   # Set up the assembler/pcode-translator
   log.debug('Setting up translator')
-  sleighfilename = os.path.join(SLEIGH_SPECFILES_PATH, 'x86.sla')
+  sleighfilename = os.path.join(SLEIGH_SPECFILES_PATH, 'x86', 'data', 'languages', 'x86.sla')
   trans = Sleigh(loader, context)
 
   log.debug('Reading Sleigh file into DOM')
@@ -78,7 +78,7 @@ def main():
 
   log.debug('Registering tags')
   docstorage.registerTag(doc)
-  
+
   log.debug('Initializing translator')
   trans.initialize(docstorage) # Initialize the translator
   log.debug('Ok')

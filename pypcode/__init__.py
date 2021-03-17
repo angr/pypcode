@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# Based on sleighexample.cc
-
 import cppyy
 import sys
 import logging
@@ -9,9 +7,8 @@ import os.path
 log = logging.getLogger(__name__)
 
 PYPCODENATIVE_PATH=os.path.join(os.path.dirname(__file__), 'pypcode-native')
-SLEIGH_PATH=os.path.join(PYPCODENATIVE_PATH, 'sleigh-2.1.0')
-SLEIGH_SRC_PATH=os.path.join(SLEIGH_PATH, 'src')
-SLEIGH_SPECFILES_PATH=os.path.join(SLEIGH_PATH, 'specfiles')
+SLEIGH_SRC_PATH=os.path.join(PYPCODENATIVE_PATH, 'sleigh')
+SLEIGH_SPECFILES_PATH=os.path.join(PYPCODENATIVE_PATH, 'processors')
 
 log.debug('Loading Library')
 cppyy.include(os.path.join(PYPCODENATIVE_PATH, 'pypcode-native.h'))
