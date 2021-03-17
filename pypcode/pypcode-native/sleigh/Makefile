@@ -37,12 +37,12 @@ CC=gcc
 CXX=g++
 
 # Debug flags
-DBG_CXXFLAGS=-g -Wall -Wno-sign-compare
+DBG_CXXFLAGS=-g -Wall -Wno-sign-compare $(CFLAGS)
 #DBG_CXXFLAGS=-g -pg -Wall -Wno-sign-compare
 #DBG_CXXFLAGS=-g -fprofile-arcs -ftest-coverage -Wall -Wno-sign-compare
 
 # Optimization flags
-OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare
+OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare $(CFLAGS)
 
 YACC=bison
 
@@ -125,7 +125,7 @@ SLEIGH_OPT=
 
 # The SLEIGH library is built with console mode objects and it
 # uses the COMMANDLINE_* options
-LIBSLA_NAMES=$(CORE) $(SLEIGH) loadimage sleigh memstate emulate opbehavior
+LIBSLA_NAMES=$(CORE) $(SLEIGH) loadimage memstate emulate opbehavior
 
 # The Decompiler library is built with console mode objects and it uses the COMMANDLINE_* options
 LIBDECOMP_NAMES=$(CORE) $(DECCORE) $(EXTRA) $(SLEIGH)
@@ -311,7 +311,7 @@ tags:
 
 # Rules to build the different dependency files
 com_dbg/depend:	$(COMMANDLINE_NAMES:%=%.cc)
-	mkdir -p com_dbg 
+	mkdir -p com_dbg
 	@set -e; rm -f $@; \
 	$(CXX) -MM $(COMMANDLINE_DEBUG) $^ > $@.$$$$; \
 	sed 's,\(.*\)\.o[ :]*,com_dbg/\1.o $@ : ,g' < $@.$$$$ > $@; \
@@ -332,7 +332,7 @@ ghi_dbg/depend:	$(GHIDRA_NAMES_DBG:%=%.cc)
 	rm -f $@.$$$$
 
 ghi_opt/depend:	$(GHIDRA_NAMES:%=%.cc)
-	mkdir -p ghi_opt 
+	mkdir -p ghi_opt
 	@set -e; rm -f $@; \
 	$(CXX) -MM $(GHIDRA_OPT) $^ > $@.$$$$; \
 	sed 's,\(.*\)\.o[ :]*,ghi_opt/\1.o $@ : ,g' < $@.$$$$ > $@; \
@@ -378,7 +378,7 @@ clean:
 resetgcov:
 	rm -f *.gcov com_dbg/*.gcda
 
-reallyclean:	clean	
+reallyclean:	clean
 	rm -rf coreext_*.cc coreext_*.hh ghidraext_*.cc ghidraext_*.hh consoleext_*.cc consoleext_*.hh
 	rm -rf com_dbg com_opt ghi_dbg ghi_opt sla_dbg sla_opt
 	rm -f $(EXECS) TAGS *~
