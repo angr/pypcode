@@ -18,6 +18,20 @@ cppyy.include(os.path.join(SLEIGH_SRC_PATH, 'translate.hh'))
 cppyy.include(os.path.join(SLEIGH_SRC_PATH, 'error.hh'))
 cppyy.load_library(os.path.join(PYPCODENATIVE_PATH, 'pypcode-native.so'))
 
+# Import names into this namespace
+from cppyy.gbl import Address
+from cppyy.gbl import AddrSpace
+from cppyy.gbl import ContextInternal
+from cppyy.gbl import DocumentStorage
+from cppyy.gbl import Element
+from cppyy.gbl import get_opname
+from cppyy.gbl import PcodeRawOutHelper
+from cppyy.gbl import SimpleLoadImage
+from cppyy.gbl import Sleigh
+from cppyy.gbl import OpCode
+from cppyy.gbl import VarnodeData
+from cppyy.gbl import PcodeOpRaw
+
 
 class AssemblyEmitCacher(cppyy.gbl.AssemblyEmit):
   def dump(self, addr, mnem, body):
@@ -61,6 +75,15 @@ class ArchLanguage:
       return self.ldef.attrib[key]
     super().__attr__(key)
 
+  def init_context_from_pspec(self, context:ContextInternal) -> None:
+    pspec = ET.parse(self.pspec_path)
+    cd = pspec.getroot().find('context_data')
+    if cd is None: return
+    cs = cd.find('context_set')
+    if cs is None: return
+    for e in cs:
+      assert(e.tag == 'set')
+      context.setVariableDefault(e.attrib['name'], int(e.attrib['val']))
 
 class Arch:
   """
@@ -101,16 +124,3 @@ class Arch:
         ldefpath = os.path.join(langdir, langname)
         yield Arch(archname, ldefpath)
 
-# Import names into this namespace
-from cppyy.gbl import Address
-from cppyy.gbl import AddrSpace
-from cppyy.gbl import ContextInternal
-from cppyy.gbl import DocumentStorage
-from cppyy.gbl import Element
-from cppyy.gbl import get_opname
-from cppyy.gbl import PcodeRawOutHelper
-from cppyy.gbl import SimpleLoadImage
-from cppyy.gbl import Sleigh
-from cppyy.gbl import OpCode
-from cppyy.gbl import VarnodeData
-from cppyy.gbl import PcodeOpRaw
