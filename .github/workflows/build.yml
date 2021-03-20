@@ -15,5 +15,6 @@ jobs:
       run: |
         python3 -m pip install --user .
         cd /tmp
-        python3 -m pypcode pcode
-        python3 -m pypcode disassemble
+        python3 -m pypcode -l
+        echo "McA5xnYRSInBg+EfigwKMAwHSP/A6+vD" | base64 -d > test-x64.bin
+        python -m pypcode x86:LE:64:default test-x64.bin
