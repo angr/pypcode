@@ -20,6 +20,7 @@ cppyy.load_library(os.path.join(PYPCODENATIVE_PATH, 'pypcode-native.so'))
 
 # Import names into this namespace
 from cppyy.gbl import Address
+from cppyy.gbl import AssemblyEmitCacher
 from cppyy.gbl import AddrSpace
 from cppyy.gbl import ContextInternal
 from cppyy.gbl import DocumentStorage
@@ -31,14 +32,6 @@ from cppyy.gbl import Sleigh
 from cppyy.gbl import OpCode
 from cppyy.gbl import VarnodeData
 from cppyy.gbl import PcodeOpRaw
-
-
-class AssemblyEmitCacher(cppyy.gbl.AssemblyEmit):
-  def dump(self, addr, mnem, body):
-    self.addr = addr
-    self.mnem = mnem
-    self.body = body
-
 
 class ArchLanguage:
   """

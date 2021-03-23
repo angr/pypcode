@@ -37,4 +37,17 @@ public:
   // to add destructor to cleanup opcache/varcache on delete.
 };
 
+class AssemblyEmitCacher : public AssemblyEmit {
+public:
+  Address addr;
+  string mnem;
+  string body;
+
+  void dump(const Address &addr,const string &mnem,const string &body) {
+    this->addr = addr;
+    this->mnem = mnem;
+    this->body = body;
+  };
+};
+
 #endif
