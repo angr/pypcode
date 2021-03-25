@@ -1,10 +1,7 @@
-sleigh/com_opt/
-sleigh/libsla.a
-pypcode-native.so
 *.java
 Module.manifest
 build.gradle
 certification.manifest
-*.sla
-sleigh/sla_opt
-sleigh/sleigh_opt
+bin/
+lib/
+csleigh.i
