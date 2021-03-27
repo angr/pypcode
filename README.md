@@ -13,7 +13,3 @@ python3 -m pip install --user git+https://github.com/angr/pypcode
 Example Usage
 -------------
 See `__main__.py` for example usage which converts a chunk of x86 code to pcode.
-
-License
--------
-SLEIGH is licensed under Apache 2. Please see full license details and disclaimers in this repo at docs/ghidra/LICENSE.
