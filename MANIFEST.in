@@ -1,1 +1,3 @@
 graft pypcode
+graft docs
+include LICENSE.txt
