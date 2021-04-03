@@ -3,33 +3,83 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  BuildAndTest:
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Build sdist
+        run: python setup.py sdist
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
+
+  build_wheels:
+    name: Build wheel ${{ matrix.wheel }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04,
-             macos-10.15,
-             windows-2019, windows-2016]
-        py: [ '3.x', 'pypy-3.7' ]
-    steps:
-    - name: Clone Tree
-      uses: actions/checkout@v2
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.py }}
-        architecture: x64 # Windows actually gets 32b pypy
-    - name: Install Dependencies
-      run: |
-        python -m pip install -U pip setuptools
-    - name: Install
-      run: |
-        python -m pip install --user -v .
-    - name: Test
-      run: |
-        mkdir tmp
-        cd tmp
+        include:
+          - { os: macos-latest,   wheel: cp36-macosx_x86_64 }
+          - { os: windows-latest, wheel: cp36-win_amd64 }
+          - { os: windows-latest, wheel: cp36-win32 }
+          - { os: ubuntu-latest,  wheel: cp36-manylinux_x86_64 }
 
-        python -m pypcode -l
-        python -c "import base64; open('test-x64.bin', 'wb').write(base64.b64decode('McA5xnYRSInBg+EfigwKMAwHSP/A6+vD'))"
-        python -m pypcode x86:LE:64:default test-x64.bin
+          - { os: macos-latest,   wheel: pp36-macosx_x86_64 }
+          - { os: windows-latest, wheel: pp36-win32 }
+          - { os: ubuntu-latest,  wheel: pp36-manylinux_x86_64 }
+
+          - { os: macos-latest,   wheel: cp37-macosx_x86_64 }
+          - { os: windows-latest, wheel: cp37-win_amd64 }
+          - { os: windows-latest, wheel: cp37-win32 }
+          - { os: ubuntu-latest,  wheel: cp37-manylinux_x86_64 }
+
+          - { os: macos-latest,   wheel: pp37-macosx_x86_64 }
+          - { os: windows-latest, wheel: pp37-win32 }
+          - { os: ubuntu-latest,  wheel: pp37-manylinux_x86_64 }
+
+          - { os: macos-latest,   wheel: cp38-macosx_x86_64 }
+          - { os: windows-latest, wheel: cp38-win_amd64 }
+          - { os: windows-latest, wheel: cp38-win32 }
+          - { os: ubuntu-latest,  wheel: cp38-manylinux_x86_64 }
+
+          - { os: macos-latest,   wheel: cp39-macosx_x86_64 }
+          - { os: windows-latest, wheel: cp39-win_amd64 }
+          - { os: windows-latest, wheel: cp39-win32 }
+          - { os: ubuntu-latest,  wheel: cp39-manylinux_x86_64 }
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==1.10.0
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ matrix.wheel }}
+          # manylinux container has an old cmake. Simply grab recent cmake from
+          # pypi. Other platforms use recent cmake provided by GH actions host.
+          CIBW_BEFORE_BUILD_LINUX: pip install cmake
+          CIBW_TEST_COMMAND: python -m pypcode -l
+          CIBW_BUILD_VERBOSITY: 1
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    # upload to PyPI on every tag starting with 'v'
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
