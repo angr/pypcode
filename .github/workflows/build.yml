@@ -63,7 +63,7 @@ jobs:
           # manylinux container has an old cmake. Simply grab recent cmake from
           # pypi. Other platforms use recent cmake provided by GH actions host.
           CIBW_BEFORE_BUILD_LINUX: pip install cmake
-          CIBW_TEST_COMMAND: python -m pypcode -l
+          CIBW_TEST_COMMAND: python -m unittest discover -v -s {project}/tests
           CIBW_BUILD_VERBOSITY: 1
       - uses: actions/upload-artifact@v2
         with:
