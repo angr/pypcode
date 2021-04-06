@@ -1,3 +1,5 @@
 graft pypcode
 prune pypcode/native/build
 include LICENSE.txt
+include build_cffi.py
+graft tests
