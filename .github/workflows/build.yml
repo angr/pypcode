@@ -89,6 +89,11 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
+          name: source
+          path: dist
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
           path: dist
       - uses: pypa/gh-action-pypi-publish@master
         with:
