@@ -1,5 +1,8 @@
-pypcode ![Build Status](https://github.com/angr/pypcode/workflows/Build/badge.svg?event=push)
+pypcode
 =======
+[![pypi](https://img.shields.io/pypi/v/pypcode)](https://pypi.org/project/pypcode/)
+[![Build Status](https://github.com/angr/pypcode/actions/workflows/build.yml/badge.svg?branch=master&event=push)](https://github.com/angr/pypcode/actions/workflows/build.yml)
+
 Machine code disassembly and IR translation library for Python using the
 excellent [SLEIGH](https://ghidra.re/courses/languages/html/sleigh.html) library
 from the [Ghidra](https://ghidra-sre.org/) framework. Primarily for use in
@@ -8,13 +11,18 @@ from the [Ghidra](https://ghidra-sre.org/) framework. Primarily for use in
 Quick Start
 -----------
 This package can be installed on Linux, macOS, and Windows platforms for recent
-versions of both CPython and PyPy. You will need a working compiler and CMake to
-build the bindings.
-
-Install with PIP+Git via:
+(3.6+) versions of both CPython and PyPy. Wheels are provided for several
+configurations. You can install the latest release from PyPI using `pip`:
 
 ```bash
-python -m pip install --user git+https://github.com/angr/pypcode
+pip3 install pypcode
+```
+
+You can also install the very latest development version from this repository
+using `pip`:
+
+```bash
+pip3 install --user git+https://github.com/angr/pypcode
 ```
 
 You can now invoke the `pypcode` module from command line to translate supported
