@@ -15,7 +15,7 @@ with open('README.md') as f:
 	long_description = f.read()
 
 setup(name='pypcode',
-	version='0.0.4',
+	version='1.0.0',
 	description='Python bindings to Ghidra\'s SLEIGH library',
 	long_description=long_description,
 	long_description_content_type='text/markdown',
