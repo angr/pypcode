@@ -15,9 +15,11 @@ jobs:
         run: python setup.py sdist
       - uses: actions/upload-artifact@v2
         with:
+          name: source
           path: dist/*.tar.gz
 
   build_wheels:
+    needs: build_sdist
     name: Build wheel ${{ matrix.wheel }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -52,21 +54,31 @@ jobs:
           - { os: ubuntu-latest,  wheel: cp39-manylinux_x86_64 }
 
     steps:
-      - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Download source distribution
+        uses: actions/download-artifact@v2
+        with:
+          name: source
+      - name: Get package name
+        run: python -c "import os, glob; open(os.environ['GITHUB_ENV'], 'w').write('PKG=' + glob.glob('pypcode-*.tar.gz')[0][0:-7] + '\n')"
+      - name: Unpack source distribution
+        run: tar -xf ${{ env.PKG }}.tar.gz
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==1.10.0
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: python -m cibuildwheel --output-dir wheelhouse ${{ env.PKG }}
         env:
           CIBW_BUILD: ${{ matrix.wheel }}
           # manylinux container has an old cmake. Simply grab recent cmake from
           # pypi. Other platforms use recent cmake provided by GH actions host.
           CIBW_BEFORE_BUILD_LINUX: pip install cmake
-          CIBW_TEST_COMMAND: python -m unittest discover -v -s {project}/tests
+          CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
           CIBW_BUILD_VERBOSITY: 1
       - uses: actions/upload-artifact@v2
         with:
+          name: wheels
           path: ./wheelhouse/*.whl
 
   upload_pypi:
@@ -77,7 +89,6 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: artifact
           path: dist
       - uses: pypa/gh-action-pypi-publish@master
         with:
