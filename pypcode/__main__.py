@@ -49,7 +49,7 @@ def main():
         print('  %-35s - %s' % (langid, langs[langid].description))
       print('')
     print('Try `--list` for full list of architectures.')
-    return
+    exit(1)
 
   # Load target binary code
   base = int(args.base, 0)
