@@ -27,5 +27,6 @@ setup(name='pypcode',
 	setup_requires=['cffi'],
 	install_requires=['cffi'],
 	cffi_modules=['build_cffi.py:ffibuilder'],
-	cmdclass={'build_ext': FfiPreBuildExtension}
+	cmdclass={'build_ext': FfiPreBuildExtension},
+	python_requires='>=3.6'
 	)
