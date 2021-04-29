@@ -1,1 +1,3 @@
 *.sla
+*.manifest
+*.gradle
