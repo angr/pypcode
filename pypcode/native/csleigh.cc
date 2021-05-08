@@ -26,7 +26,16 @@ static inline constexpr T* owner_of( M *ptr, const M T::*member ) {
     return reinterpret_cast< T* >( reinterpret_cast< intptr_t >( ptr ) - offset_of( member ) );
 }
 
-void convertAddressToCType(const Address &in, LPX(Address) &out) {
+void convertVarnodeToCType(const VarnodeData &var, LPX(Varnode) &out)
+{
+    assert(var.space != NULL);
+    out.space = (LPX(AddrSpace)*)(var.space);
+    out.offset = var.offset;
+    out.size = var.size;
+}
+
+void convertAddressToCType(const Address &in, LPX(Address) &out)
+{
     out.space = (LPX(AddrSpace)*)in.getSpace();
     out.offset = in.getOffset();
 }
@@ -128,14 +137,6 @@ public:
     {
     }
 
-    void createVarnode(const VarnodeData *var, LPX(Varnode) &out)
-    {
-        assert(var->space != NULL);
-        out.space = (LPX(AddrSpace)*)(var->space);
-        out.offset = var->offset;
-        out.size = var->size;
-    }
-
     void dump(const Address &addr, OpCode opc, VarnodeData *outvar,
               VarnodeData *vars, int4 isize)
     {
@@ -153,7 +154,7 @@ public:
 
         int vni = 0;
         if (outvar) {
-            createVarnode(outvar, vna[vni]);
+            convertVarnodeToCType(*outvar, vna[vni]);
             op.output = &vna[vni++];
         } else {
             op.output = NULL;
@@ -162,7 +163,7 @@ public:
         op.inputs_count = isize;
         op.inputs = &vna[vni];
         for (int4 i = 0; i < isize; i++) {
-            createVarnode(&vars[i], vna[vni++]);
+            convertVarnodeToCType(vars[i], vna[vni++]);
         }
 
         m_vars.emplace_back(vna);
@@ -234,6 +235,8 @@ public:
     Element            *m_tags;
     unique_ptr<Sleigh>  m_sleigh;
     string              m_register_name_cache;
+    vector<string>      m_register_names;
+    vector<LPX(RegisterDefinition)> m_registers;
 
     TranslationContext()
     {
@@ -257,6 +260,19 @@ public:
         m_sleigh.reset(new Sleigh(&m_loader, &m_context_db));
         m_sleigh->initialize(m_document_storage);
         m_context_db.finalize();
+
+        // Vectorize the register map
+        map<VarnodeData,string> regmap;
+        m_sleigh->getAllRegisters(regmap);
+        m_registers.reserve(regmap.size());
+        for (auto const & i : regmap) {
+            m_registers.emplace_back();
+            convertVarnodeToCType(i.first, m_registers.back().varnode);
+            m_register_names.push_back(i.second);
+        }
+        for (unsigned int i = 0; i < m_registers.size(); i++) {
+            m_registers[i].name = m_register_names[i].c_str();
+        }
 
         return true;
     }
@@ -410,4 +426,11 @@ const char *LPX(Sleigh_getRegisterName)(LPX(Context) c, LPX(AddrSpace) as,
 {
     return ((TranslationContext *)c)->Sleigh_getRegisterName(
         (AddrSpace *)as, off, size);
+}
+
+LPX(RegisterDefinition) *LPX(Sleigh_getAllRegisters)(LPX(Context) c, unsigned int *count)
+{
+    TranslationContext *ctx = (TranslationContext *)c;
+    *count = ctx->m_registers.size();
+    return &ctx->m_registers[0];
 }
