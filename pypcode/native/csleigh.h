@@ -169,6 +169,11 @@ typedef struct {
 	unsigned int      instructions_count;
 } LPX(TranslationResult);
 
+typedef struct {
+	const char   *name;
+	LPX(Varnode)  varnode;
+} LPX(RegisterDefinition);
+
 /*
  * Create a translation context
  */
@@ -213,6 +218,13 @@ const char *LPX(AddrSpace_getName)(LPX(AddrSpace) as);
  * Sleigh::getRegisterName
  */
 const char *LPX(Sleigh_getRegisterName)(LPX(Context) c, LPX(AddrSpace) as, uintb off, int4 size);
+
+/*
+ * Sleigh::getAllRegisters
+ *
+ * Note: Returned pointer is managed by context.
+ */
+LPX(RegisterDefinition) *LPX(Sleigh_getAllRegisters)(LPX(Context) c, unsigned int *count);
 
 #ifdef __cplusplus
 } /* extern "C" { */

@@ -126,6 +126,7 @@ class Context:
     'lang',
     'ctx_c',
     '_cached_addr_spaces',
+    'registers',
     )
 
   lang: ArchLanguage
@@ -137,6 +138,15 @@ class Context:
     self.lang = lang
     self.ctx_c = csleigh_createContext(self.lang.slafile_path.encode('utf-8'))
     self.lang.init_context_from_pspec(self.ctx_c)
+
+    count_a = ffi.new("unsigned int *count")
+    regs = csleigh_Sleigh_getAllRegisters(self.ctx_c, count_a)
+
+    self.registers = {}
+    for i in range(count_a[0]):
+      reg_name = ffi.string(regs[i].name).decode('utf-8')
+      reg_vn = Varnode.from_c(self, regs[i].varnode)
+      self.registers[reg_name] = reg_vn
 
   def __del__(self):
     csleigh_destroyContext(self.ctx_c)
