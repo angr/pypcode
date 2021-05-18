@@ -7,7 +7,7 @@ import sys
 import os.path
 import xml.etree.ElementTree as ET
 from enum import Enum
-from typing import Generator, Sequence, Optional, Mapping, Union
+from typing import Generator, Sequence, Optional, Mapping, Union, Tuple
 
 from ._csleigh import ffi
 from ._csleigh.lib import *
@@ -42,15 +42,20 @@ class ArchLanguage:
 
   __slots__ = (
     "archdir",
-    "ldef"
+    "ldef",
+    "_pspec",
+    "_cspecs",
     )
 
   archdir: str
   ldef: ET.Element
+  pspec: Optional[ET.Element]
 
   def __init__(self, archdir:str, ldef:ET.Element):
     self.archdir = archdir
     self.ldef = ldef
+    self._pspec = None
+    self._cspecs = None
 
   @property
   def pspec_path(self) -> str:
@@ -69,9 +74,24 @@ class ArchLanguage:
       return self.ldef.attrib[key]
     raise AttributeError(key)
 
+  @property
+  def pspec(self) -> ET.Element:
+    if self._pspec is None:
+      self._pspec = ET.parse(self.pspec_path).getroot()
+    return self._pspec
+
+  @property
+  def cspecs(self) -> Mapping[Tuple[str, str], ET.Element]:
+    if self._cspecs is None:
+      self._cspecs = {}
+      for e in self.ldef.findall('compiler'):
+        path = os.path.join(self.archdir, e.attrib['spec'])
+        cspec = ET.parse(path).getroot()
+        self._cspecs[(e.attrib['id'], e.attrib['name'])] = cspec
+    return self._cspecs
+
   def init_context_from_pspec(self, ctx:'csleigh_Context') -> None:
-    pspec = ET.parse(self.pspec_path)
-    cd = pspec.getroot().find('context_data')
+    cd = self.pspec.find('context_data')
     if cd is None: return
     cs = cd.find('context_set')
     if cs is None: return
