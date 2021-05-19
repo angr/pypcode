@@ -320,7 +320,7 @@ class SeqNum(ContextObj):
   uniq: int
   order: int
 
-  def __init__(self, ctx:Context, pc:AddrSpace, uniq:int, order:int):
+  def __init__(self, ctx:Context, pc:Address, uniq:int, order:int):
     super().__init__(ctx)
     self.pc = pc
     self.uniq = uniq
