@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <unordered_set>
 #include "sleigh/loadimage.hh"
 #include "sleigh/sleigh.hh"
 #include "csleigh.h"
@@ -29,6 +30,35 @@ void convertAddressToCType(const Address &in, LPX(Address) &out) {
     out.space = (LPX(AddrSpace)*)in.getSpace();
     out.offset = in.getOffset();
 }
+
+class ContextPypcode : public ContextInternal
+{
+    bool                        m_finalized;
+    std::unordered_set<string>  m_variables;
+
+public:
+    ContextPypcode()
+    : ContextInternal()
+    {
+        m_finalized = false;
+    }
+
+    void finalize() { m_finalized = true; }
+
+    virtual void registerVariable(const string &nm,int4 sbit,int4 ebit) {
+        if (!m_finalized) {
+            ContextInternal::registerVariable(nm, sbit, ebit);
+            m_variables.insert(nm);
+        }
+    }
+
+    void resetAllVariables() {
+        for (const string &nm : m_variables) {
+            auto val = ContextDatabase::getDefaultValue(nm);
+            setVariableRegion(nm, Address(Address::m_minimal), Address(), val);
+        }
+    }
+};
 
 class SimpleLoadImage : public LoadImage
 {
@@ -198,7 +228,7 @@ class TranslationContext
 {
 public:
     SimpleLoadImage     m_loader;
-    ContextInternal     m_context_internal;
+    ContextPypcode      m_context_db;
     DocumentStorage     m_document_storage;
     Document           *m_document;
     Element            *m_tags;
@@ -224,8 +254,9 @@ public:
         m_document_storage.registerTag(m_tags);
 
         LOG("Setting up translator");
-        m_sleigh.reset(new Sleigh(&m_loader, &m_context_internal));
+        m_sleigh.reset(new Sleigh(&m_loader, &m_context_db));
         m_sleigh->initialize(m_document_storage);
+        m_context_db.finalize();
 
         return true;
     }
@@ -241,8 +272,9 @@ public:
             this, bytes, num_bytes, address, max_instructions);
 
         // Reset state
-        m_sleigh->reset(&m_loader, &m_context_internal);
+        m_sleigh->reset(&m_loader, &m_context_db);
         m_sleigh->initialize(m_document_storage);
+        m_context_db.resetAllVariables();
         m_loader.setData(address, bytes, num_bytes);
 
         TranslationResult *res = new TranslationResult();
@@ -353,7 +385,7 @@ void LPX(freeResult)(LPX(TranslationResult) *r)
 
 void LPX(setVariableDefault)(LPX(Context) c, const char *name, uintm val)
 {
-    ((TranslationContext *)c)->m_context_internal.setVariableDefault(name, val);
+    ((TranslationContext *)c)->m_context_db.setVariableDefault(name, val);
 }
 
 int LPX(Addr_isConstant)(LPX(Address) *a)
