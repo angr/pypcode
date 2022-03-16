@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.9)
 project(csleigh)
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
 
+SEPARATE_ARGUMENTS(NEW_CMAKE_C_FLAGS NATIVE_COMMAND ${CMAKE_C_FLAGS})
+
 # First for the generic no-config case (e.g. with mingw)
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
@@ -67,7 +69,7 @@ endif()
 
 add_custom_target(
 	csleigh.i ALL
-	COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} ${PREPROCESSOR_ONLY_FLAGS} ${CMAKE_SOURCE_DIR}/csleigh.h > ${CMAKE_BINARY_DIR}/csleigh.i
+	COMMAND ${CMAKE_C_COMPILER} ${NEW_CMAKE_C_FLAGS} ${PREPROCESSOR_ONLY_FLAGS} ${CMAKE_SOURCE_DIR}/csleigh.h > ${CMAKE_BINARY_DIR}/csleigh.i
 	BYPRODUCTS ${CMAKE_BINARY_DIR}/csleigh.i
 	VERBATIM
 )
