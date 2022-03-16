@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+import os
 from setuptools import setup, find_packages
-from build_cffi import FfiPreBuildExtension
-import os, os.path
+import sys
+
+sys.path.append(os.getcwd())
+import build_cffi
 
 def add_pkg_data_dirs(pkg, dirs):
 	pkg_data = []
@@ -27,6 +30,6 @@ setup(name='pypcode',
 	setup_requires=['cffi'],
 	install_requires=['cffi'],
 	cffi_modules=['build_cffi.py:ffibuilder'],
-	cmdclass={'build_ext': FfiPreBuildExtension},
+	cmdclass={'build_ext': build_cffi.FfiPreBuildExtension},
 	python_requires='>=3.6'
 	)
