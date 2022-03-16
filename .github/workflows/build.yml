@@ -36,9 +36,11 @@ jobs:
           - { os: ubuntu-latest,  wheel: cp37-manylinux_x86_64 }
 
           - { os: macos-latest,   wheel: pp37-macosx_x86_64 }
+          - { os: windows-latest, wheel: pp37-win_amd64 }
           - { os: ubuntu-latest,  wheel: pp37-manylinux_x86_64 }
 
           - { os: macos-latest,   wheel: pp38-macosx_x86_64 }
+          - { os: windows-latest, wheel: pp38-win_amd64 }
           - { os: ubuntu-latest,  wheel: pp38-manylinux_x86_64 }
 
           - { os: macos-latest,   wheel: cp38-macosx_x86_64 }
