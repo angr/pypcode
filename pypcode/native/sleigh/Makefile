@@ -6,11 +6,13 @@ ARCH_TYPE=
 ADDITIONAL_FLAGS=
 SLEIGHVERSION=sleigh-2.1.0
 
-EXTENSION_POINT=../../../../../../../ghidra.ext/Ghidra/Features/DecompilerExtensions/src/decompile/cpp
+EXTENSION_POINT=../../../../../../../ghidra.ext-u/Ghidra/Features/DecompilerExtensions/src/decompile/cpp
 GHIDRA_BIN=../../../../../../../ghidra.bin
 
 OS = $(shell uname -s)
 CPU = $(shell uname -m)
+
+# TODO: need to revise to support arm64/aarch64 arch - improve on both OS and arch detection
 
 ifeq ($(OS),Linux)
 # Allow ARCH to be specified externally so we can build for 32-bit from a 64-bit Linux
@@ -19,43 +21,46 @@ ifndef ARCH
 endif
 ifeq ($(ARCH),x86_64)
   ARCH_TYPE=-m64
-  OSDIR=linux64
+  OSDIR=linux_x86_64
 else
   ARCH_TYPE=-m32
-  OSDIR=linux32
+  OSDIR=linux_x86_32
 endif
 endif
 
 ifeq ($(OS),Darwin)
   MAKE_STATIC=
   ARCH_TYPE=-arch x86_64
-  ADDITIONAL_FLAGS=-std=c++11 -mmacosx-version-min=10.6 -w
-  OSDIR=osx64
+  ADDITIONAL_FLAGS=-mmacosx-version-min=10.6 -w
+  OSDIR=mac_x86_64
 endif
 
 CC=gcc
 CXX=g++
 
 # Debug flags
-DBG_CXXFLAGS=-g -Wall -Wno-sign-compare $(CFLAGS)
+DBG_CXXFLAGS=-g -std=c++11 -Wall -Wno-sign-compare $(CFLAGS)
 #DBG_CXXFLAGS=-g -pg -Wall -Wno-sign-compare
 #DBG_CXXFLAGS=-g -fprofile-arcs -ftest-coverage -Wall -Wno-sign-compare
 
 # Optimization flags
-OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare $(CFLAGS)
+OPT_CXXFLAGS=-O2 -std=c++11 -Wall -Wno-sign-compare $(CFLAGS)
 
 YACC=bison
 
 # libraries
 #INCLUDES=-I$(BFDHOME)/include
 INCLUDES=
-BFDLIB=-lbfd -liberty -lz
+BFDLIB=-lbfd -lz
 
 LNK=
 
 # Source files
 ALL_SOURCE= $(wildcard *.cc)
 ALL_NAMES=$(subst .cc,,$(ALL_SOURCE))
+UNITTEST_SOURCE= $(wildcard ../unittests/*.cc)
+UNITTEST_NAMES=$(subst .cc,,$(UNITTEST_SOURCE))
+UNITTEST_STRIP=$(subst ../unittests/,,$(UNITTEST_NAMES))
 
 COREEXT_SOURCE= $(wildcard coreext_*.cc)
 COREEXT_NAMES=$(subst .cc,,$(COREEXT_SOURCE))
@@ -114,11 +119,11 @@ COMMANDLINE_NAMES=$(CORE) $(DECCORE) $(EXTRA) $(SLEIGH) consolemain
 COMMANDLINE_DEBUG=-DCPUI_DEBUG -D__TERMINAL__
 COMMANDLINE_OPT=-D__TERMINAL__
 
-TEST_NAMES=$(CORE) $(DECCORE) $(SLEIGH) test
-TEST_DEBUG=-D__TERMINAL__ -g -O0
+TEST_NAMES=$(CORE) $(DECCORE) $(SLEIGH) $(EXTRA) test
+TEST_DEBUG=-D__TERMINAL__
 
 GHIDRA_NAMES=$(CORE) $(DECCORE) $(GHIDRA)
-GHIDRA_NAMES_DBG=$(GHIDRA_NAMES) callgraph ifacedecomp ifaceterm interface
+GHIDRA_NAMES_DBG=$(GHIDRA_NAMES) callgraph ifacedecomp testfunction ifaceterm interface
 GHIDRA_DEBUG=-DCPUI_DEBUG
 GHIDRA_OPT=
 
@@ -136,7 +141,7 @@ LIBDECOMP_NAMES=$(CORE) $(DECCORE) $(EXTRA) $(SLEIGH)
 # object file macros
 COMMANDLINE_DBG_OBJS=$(COMMANDLINE_NAMES:%=com_dbg/%.o)
 COMMANDLINE_OPT_OBJS=$(COMMANDLINE_NAMES:%=com_opt/%.o)
-TEST_DEBUG_OBJS=$(TEST_NAMES:%=test_dbg/%.o)
+TEST_DEBUG_OBJS=$(TEST_NAMES:%=test_dbg/%.o) $(UNITTEST_STRIP:%=test_dbg/%.o)
 GHIDRA_DBG_OBJS=$(GHIDRA_NAMES_DBG:%=ghi_dbg/%.o)
 GHIDRA_OPT_OBJS=$(GHIDRA_NAMES:%=ghi_opt/%.o)
 SLEIGH_DBG_OBJS=$(SLEIGH_NAMES:%=sla_dbg/%.o)
@@ -214,7 +219,9 @@ com_dbg/%.o:	%.cc
 com_opt/%.o:	%.cc
 	$(CXX) $(ARCH_TYPE) -c $(OPT_CXXFLAGS) $(ADDITIONAL_FLAGS) $(COMMANDLINE_OPT)   $< -o $@
 test_dbg/%.o:	%.cc
-	$(CXX) $(ARCH_TYPE) -c $(OPT_CXXFLAGS) $(ADDITIONAL_FLAGS) $(TEST_DEBUG)   $< -o $@
+	$(CXX) $(ARCH_TYPE) -c $(DBG_CXXFLAGS) $(ADDITIONAL_FLAGS) $(TEST_DEBUG)        $< -o $@
+test_dbg/%.o:	../unittests/%.cc
+	$(CXX) -I. $(ARCH_TYPE) -c $(DBG_CXXFLAGS) $(ADDITIONAL_FLAGS) $(TEST_DEBUG)        $< -o $@
 ghi_dbg/%.o:	%.cc
 	$(CXX) $(ARCH_TYPE) -c $(DBG_CXXFLAGS) $(ADDITIONAL_FLAGS) $(GHIDRA_DEBUG)      $< -o $@
 ghi_opt/%.o:	%.cc
@@ -248,7 +255,7 @@ decomp_opt:	$(COMMANDLINE_OPT_OBJS)
 	$(CXX) $(OPT_CXXFLAGS) $(ARCH_TYPE) -o decomp_opt $(COMMANDLINE_OPT_OBJS) $(BFDLIB) $(LNK)
 
 ghidra_test_dbg:	$(TEST_DEBUG_OBJS)
-	$(CXX) $(OPT_CXXFLAGS) $(ARCH_TYPE) -o ghidra_test_dbg $(TEST_DEBUG_OBJS) $(BFDLIB) $(LNK)
+	$(CXX) $(DBG_CXXFLAGS) $(ARCH_TYPE) -o ghidra_test_dbg $(TEST_DEBUG_OBJS) $(BFDLIB) $(LNK)
 
 test: ghidra_test_dbg
 	./ghidra_test_dbg
@@ -291,7 +298,7 @@ libdecomp.a:	$(LIBDECOMP_OPT_OBJS)
 	ar qc libdecomp.a $(LIBDECOMP_OPT_OBJS)
 	ranlib libdecomp.a
 
-sleighexamp_dir:
+sleighexamp_dir: slghscan.cc
 	rm -rf $(SLEIGHVERSION)
 	mkdir $(SLEIGHVERSION)
 	mkdir $(SLEIGHVERSION)/src $(SLEIGHVERSION)/specfiles
@@ -339,10 +346,10 @@ com_opt/depend:	$(COMMANDLINE_NAMES:%=%.cc)
 	sed 's,\(.*\)\.o[ :]*,com_opt/\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-test_dbg/depend:	$(TEST_NAMES:%=%.cc)
+test_dbg/depend:	$(TEST_NAMES:%=%.cc) $(UNITTEST_NAMES:%=%.cc)
 	mkdir -p test_dbg
 	@set -e; rm -f $@; \
-	$(CXX) -MM $(TEST_DEBUG) $^ > $@.$$$$; \
+	$(CXX) -I. -MM $(TEST_DEBUG) $^ > $@.$$$$; \
 	sed 's,\(.*\)\.o[ :]*,test_dbg/\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 

@@ -19,32 +19,6 @@
 #include <cmath>
 #include "address.hh"
 
-#if defined(_WINDOWS) && !defined(INFINITY)
-
-// Some definitions for Windows floating point stuff
-#include <cfloat>
-
-inline int4 signbit(double x) {
-  return (((_fpclass(x)& (_FPCLASS_NINF | _FPCLASS_NN
-			  | _FPCLASS_ND | _FPCLASS_NZ))!=0) ? 1 : 0);
-}
-
-inline int4 isnan(double x) {
-  return (((_fpclass(x)& (_FPCLASS_SNAN | _FPCLASS_QNAN))!=0) ? 1 : 0);
-}
-
-inline int4 isinf(double x) {
-  int4 classify = _fpclass(x);
-  if (classify == _FPCLASS_NINF) return -1;
-  if (classify == _FPCLASS_PINF) return 1;
-  return 0;
-}
-
-#define INFINITY HUGE_VAL
-#define NAN (INFINITY/INFINITY)
-
-#endif
-
 /// Set format for a given encoding size according to IEEE 754 standards
 /// \param sz is the size of the encoding in bytes
 FloatFormat::FloatFormat(int4 sz)
@@ -105,10 +79,10 @@ FloatFormat::floatclass FloatFormat::extractExpSig(double x,bool *sgn,uintb *sig
 {
   int4 e;
 
-  *sgn = (signbit(x) != 0);
+  *sgn = std::signbit(x);
   if (x == 0.0) return zero;
-  if (isinf(x)!=0) return infinity;
-  if (isnan(x)!=0) return nan;
+  if (std::isinf(x)) return infinity;
+  if (std::isnan(x)) return nan;
   if (*sgn)
     x = -x;
   double norm = frexp(x,&e);  // norm is between 1/2 and 1
@@ -287,8 +261,8 @@ double FloatFormat::getHostFloat(uintb encoding,floatclass *type) const
 bool FloatFormat::roundToNearestEven(uintb &signif, int4 lowbitpos)
 
 {
-  uintb lowbitmask = (lowbitpos < 8 * sizeof(uintb)) ? (1UL << lowbitpos) : 0;
-  uintb midbitmask = 1UL << (lowbitpos - 1);
+  uintb lowbitmask = (lowbitpos < 8 * sizeof(uintb)) ? ((uintb)1 << lowbitpos) : 0;
+  uintb midbitmask = (uintb)1 << (lowbitpos - 1);
   uintb epsmask = midbitmask - 1;
   bool odd = (signif & lowbitmask) != 0;
   if ((signif & midbitmask) != 0 && ((signif & epsmask) != 0 || odd)) {
@@ -327,7 +301,7 @@ uintb FloatFormat::getEncoding(double host) const
     if (roundToNearestEven(signif, 8 * sizeof(uintb) - frac_size - exp)) {
       // TODO handle round to normal case
       if ((signif >> (8 * sizeof(uintb) - 1)) == 0) {
-	signif = 1UL << (8 * sizeof(uintb) - 1);
+	signif = (uintb)1 << (8 * sizeof(uintb) - 1);
 	exp += 1;
       }
     }
@@ -339,7 +313,7 @@ uintb FloatFormat::getEncoding(double host) const
     // if high bit is clear, then the add overflowed. Increase exp and set
     // signif to 1.
     if ((signif >> (8 * sizeof(uintb) - 1)) == 0) {
-      signif = 1UL << (8 * sizeof(uintb) - 1);
+      signif = (uintb)1 << (8 * sizeof(uintb) - 1);
       exp += 1;
     }
   }
@@ -388,7 +362,7 @@ uintb FloatFormat::convertEncoding(uintb encoding,
   else { // incoming is normal
     exp -= formin->bias;
     if (jbitimplied)
-      signif = (1UL << (8 * sizeof(uintb) - 1)) | (signif >> 1);
+      signif = ((uintb)1 << (8 * sizeof(uintb) - 1)) | (signif >> 1);
   }
 
   exp += bias;
@@ -400,7 +374,7 @@ uintb FloatFormat::convertEncoding(uintb encoding,
     if (roundToNearestEven(signif, 8 * sizeof(uintb) - frac_size - exp)) {
       // TODO handle carry to normal case
       if ((signif >> (8 * sizeof(uintb) - 1)) == 0) {
-	signif = 1UL << (8 * sizeof(uintb) - 1);
+	signif = (uintb)1 << (8 * sizeof(uintb) - 1);
 	exp += 1;
       }
     }
@@ -412,7 +386,7 @@ uintb FloatFormat::convertEncoding(uintb encoding,
     // if high bit is clear, then the add overflowed. Increase exp and set
     // signif to 1.
     if ((signif >> (8 * sizeof(uintb) - 1)) == 0) {
-      signif = 1UL << (8 * sizeof(uintb) - 1);
+      signif = (uintb)1 << (8 * sizeof(uintb) - 1);
       exp += 1;
     }
   }

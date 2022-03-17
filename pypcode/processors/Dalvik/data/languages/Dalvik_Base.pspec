@@ -3,12 +3,12 @@
 <processor_spec>
   <properties>
     <property key="DisableAllAnalyzers" value="value ignored, just turns them off"/>
-    <property key="Analyzers.Android DEX Condense Filler Bytes" value="true"/>
-    <property key="Analyzers.Android DEX Data Markup" value="true"/>
-    <property key="Analyzers.Android DEX Exception Handlers" value="true"/>
-    <property key="Analyzers.Android DEX Header Format" value="true"/>
-    <property key="Analyzers.Android DEX Instruction Markup" value="true"/>
-    <property key="Analyzers.Android DEX Switch Table Markup" value="true"/>
+    <property key="Analyzers.Android DEX/CDEX Condense Filler Bytes" value="true"/>
+    <property key="Analyzers.Android DEX/CDEX Data Markup" value="true"/>
+    <property key="Analyzers.Android DEX/CDEX Exception Handlers" value="true"/>
+    <property key="Analyzers.Android DEX/CDEX Header Format" value="true"/>
+    <property key="Analyzers.Android DEX/CDEX Instruction Markup" value="true"/>
+    <property key="Analyzers.Android DEX/CDEX Switch Table Markup" value="true"/>
     <property key="Analyzers.Android ODEX Header Format" value="true"/>
     <property key="pcodeInjectLibraryClass" value="ghidra.dalvik.dex.inject.PcodeInjectLibraryDex"/>
   </properties>
