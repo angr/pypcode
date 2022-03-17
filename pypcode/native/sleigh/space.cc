@@ -546,14 +546,14 @@ uintb JoinSpace::restoreXmlAttributes(const Element *el,uint4 &size) const
     }
     int4 pos = (int4)(attrName[5] - '1');
     while(pieces.size() <= pos)
-      pieces.push_back(VarnodeData());
+      pieces.emplace_back();
     VarnodeData &vdat( pieces[pos] );
 
     string attrVal = el->getAttributeValue(i);
     string::size_type offpos = attrVal.find(':');
     if (offpos == string::npos) {
-      const Translate *trans = getTrans();
-      const VarnodeData &point(trans->getRegister(attrVal));
+      const Translate *tr = getTrans();
+      const VarnodeData &point(tr->getRegister(attrVal));
       vdat = point;
     }
     else {
@@ -604,7 +604,7 @@ uintb JoinSpace::read(const string &s,int4 &size) const
   int4 szsum = 0;
   int4 i=0;
   while(i < s.size()) {
-    pieces.push_back(VarnodeData()); // Prepare to read next VarnodeData
+    pieces.emplace_back();	// Prepare to read next VarnodeData
     string token;
     while((i<s.size())&&(s[i]!=',')) {
       token += s[i];
@@ -615,8 +615,8 @@ uintb JoinSpace::read(const string &s,int4 &size) const
       pieces.back() = getTrans()->getRegister(token);
     }
     catch(LowlevelError &err) {	// Name doesn't exist
-      char shortcut = token[0];
-      AddrSpace *spc = getManager()->getSpaceByShortcut(shortcut);
+      char tryShortcut = token[0];
+      AddrSpace *spc = getManager()->getSpaceByShortcut(tryShortcut);
       if (spc == (AddrSpace *)0)
 	throw LowlevelError("Could not parse join string");
 

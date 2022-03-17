@@ -2,6 +2,10 @@
 #	Sleigh specification file for DALVIK VM
 #------------------------------------------------------------------------------------
 
+# Source:
+# https://android.googlesource.com/platform/art/+/[...]/runtime/dex_instruction_list.h
+#		where [...] is the actual Android version name (ie "oreo-release")
+
 define endian=little;
 
 define alignment=1;
@@ -276,6 +280,10 @@ define pcodeop invokeVirtualQuick;
 define pcodeop invokeVirtualQuickRange;
 
 define pcodeop switchAssist;
+
+define pcodeop breakpoint;
+
+#SOURCE:  https://android.googlesource.com/platform/art/+/kitkat-dev/runtime/dex_instruction_list.h
 
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
@@ -806,8 +814,7 @@ define pcodeop switchAssist;
 :packed_switch registerA8,B_BITS_0_31_S is inst0=0x2b ; registerA8 ; B_BITS_0_31_S
 {
 	distance:4   =  B_BITS_0_31_S * 2;
-	# ident:2      =  *[ram] ( inst_start + distance );
-	# if (ident != 0x0100) goto inst_next;
+	ident:4      =  *[ram] ( inst_start + distance );
 	size2:2      =  *[ram] ( inst_start + distance + 2 );
 	sze:4       =  zext( size2 );
 	first_key:4  =  *[ram] ( inst_start + distance + 2 + 2 );
@@ -964,16 +971,6 @@ define pcodeop switchAssist;
 {
 	if ( registerA8 s<= 0 ) goto rel16;
 }
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-# 0x3e unused
-# 0x3f unused
-# 0x40 unused
-# 0x41 unused
-# 0x42 unused
-# 0x43 unused
 
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
@@ -1494,11 +1491,6 @@ define pcodeop switchAssist;
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
 
-# 0x73 unused
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
 # Call the indicated method. 
 # See first invoke-kind description above for details, caveats, and suggestions. 
 # 
@@ -1537,12 +1529,6 @@ define pcodeop switchAssist;
 	destination:4 = cpool(registerC16, B_BITS_0_15:4, $(CPOOL_METHOD));
 	call [ destination ];
 } 
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-# 0x79 unused
-# 0x7a unused
 
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
@@ -2037,356 +2023,3 @@ define pcodeop switchAssist;
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
 
-:iget_volatile registerA4,[registerB4:C_BITS_0_15]  is inst0=0xe3 ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	registerA4 = getInstanceFieldVolatile( registerB4, C_BITS_0_15:16 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iput_volatile registerA4,[registerB4:C_BITS_0_15]  is inst0=0xe4 ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	setInstanceFieldVolatile( registerB4, C_BITS_0_15:16, registerA4 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:sget_volatile registerA8,B_BITS_0_15 is inst0=0xe5 ; registerA8 ; B_BITS_0_15
-{
-	registerA8 = getStaticFieldVolatile( B_BITS_0_15:16 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:sput_volatile registerA8,B_BITS_0_15 is inst0=0xe6 ; registerA8 ; B_BITS_0_15
-{
-	setStaticFieldVolatile( B_BITS_0_15:16, registerA8 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iget_object_volatile registerA4,[registerB4:C_BITS_0_15]  is inst0=0xe7 ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	registerA4 = getInstanceFieldVolatile( registerB4, C_BITS_0_15:16 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iget_wide_volatile registerA4w,[registerB4:C_BITS_0_15]  is inst0=0xe8 ; registerA4w & registerB4 ; C_BITS_0_15 
-{
-	registerA4w = getInstanceFieldVolatile( registerB4, C_BITS_0_15:16 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iput_wide_volatile registerA4w,[registerB4:C_BITS_0_15]  is inst0=0xe9 ; registerA4w & registerB4 ; C_BITS_0_15 
-{
-	setInstanceFieldVolatile( registerB4, C_BITS_0_15:16, registerA4w );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:sget_wide_volatile registerA8w,B_BITS_0_15 is inst0=0xea ; registerA8w ; B_BITS_0_15
-{
-	registerA8w = getStaticFieldVolatile( B_BITS_0_15:16 );
-}
-
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:sput_wide_volatile registerA8w,B_BITS_0_15 is inst0=0xeb ; registerA8w ; B_BITS_0_15
-{
-	setStaticFieldVolatile( B_BITS_0_15:16, registerA8w );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iput_byte_quick registerA4,[registerB4:C_BITS_0_15]  is inst0=0xec ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	setInstanceFieldQuick( registerB4, C_BITS_0_15:16, registerA4 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:throw_verification_error  registerA8,registerB16  is inst0=0xed ; registerA8 ; registerB16
-{
-	registerA8 = registerB16;
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:execute_inline INLINE,{} is inst0=0xee ; N_PARAMS=0 & INLINE
-{
-	destination:4 = *[ram] ( ( 4 * INLINE:4 ) + 0xe0000000 );
-	call [ destination ];
-}
-:execute_inline INLINE,{regParamC} is inst0=0xee ; N_PARAMS=1 & INLINE & regParamC
-{
-	destination:4 = *[ram] ( ( 4 * INLINE:4 ) + 0xe0000000 );
-	call [ destination ];	
-}
-:execute_inline INLINE,{regParamC,regParamD} is inst0=0xee ; N_PARAMS=2 & INLINE & regParamC & regParamD
-{
-	destination:4 = *[ram] ( ( 4 * INLINE:4 ) + 0xe0000000 );
-	call [ destination ];
-}
-:execute_inline INLINE,{regParamC,regParamD,regParamE} is inst0=0xee ; N_PARAMS=3 & INLINE & regParamC & regParamD & regParamE
-{
-	destination:4 = *[ram] ( ( 4 * INLINE:4 ) + 0xe0000000 );
-	call [ destination ];
-}
-:execute_inline INLINE,{regParamC,regParamD,regParamE,regParamF} is inst0=0xee ; N_PARAMS=4 & INLINE & regParamC & regParamD & regParamE & regParamF
-{
-	destination:4 = *[ram] ( ( 4 * INLINE:4 ) + 0xe0000000 );
-	call [ destination ];
-}
-:execute_inline INLINE,{regParamC,regParamD,regParamE,regParamF,regParamG} is inst0=0xee ; N_PARAMS=5 & INLINE & regParamC & regParamD & regParamE & regParamF & regParamG
-{
-	destination:4 = *[ram] ( ( 4 * INLINE:4 ) + 0xe0000000 );
-	call [ destination ];
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:execute_inline_range  "inline@"^B_BITS_0_15,A_BITS_0_7,registerC16  is inst0=0xef ; A_BITS_0_7 ; B_BITS_0_15 ; registerC16
-{
-	destination:4 = *[ram] ( ( 4 * B_BITS_0_15:4 ) + 0xe0000000 );
-	call [ destination ];
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-# THIS ODEX INSTRUCTION WAS VALID UNTIL API version 13 (OS Version 3.2.x)
-
-# :invoke_direct_empty METHOD_INDEX is inst0=0xf0 ; N_PARAMS=0 & METHOD_INDEX
-# {
-# 	destination:4 = *[ram] ( ( 4 * METHOD_INDEX:4 ) + 0xe0000000 );
-# 	call [ destination ];
-# }
-# :invoke_direct_empty METHOD_INDEX,regParamC is inst0=0xf0 ; N_PARAMS=1 & METHOD_INDEX & regParamC
-# {
-# 	destination:4 = *[ram] ( ( 4 * METHOD_INDEX:4 ) + 0xe0000000 );
-# 	call [ destination ];	
-# }
-# :invoke_direct_empty METHOD_INDEX,regParamC,regParamD is inst0=0xf0 ; N_PARAMS=2 & METHOD_INDEX & regParamC & regParamD
-# {
-# 	destination:4 = *[ram] ( ( 4 * METHOD_INDEX:4 ) + 0xe0000000 );
-# 	call [ destination ];
-# }
-# :invoke_direct_empty METHOD_INDEX,regParamC,regParamD,regParamE is inst0=0xf0 ; N_PARAMS=3 & METHOD_INDEX & regParamC & regParamD & regParamE
-# {
-# 	destination:4 = *[ram] ( ( 4 * METHOD_INDEX:4 ) + 0xe0000000 );
-# 	call [ destination ];
-# }
-# :invoke_direct_empty METHOD_INDEX,regParamC,regParamD,regParamE,regParamF is inst0=0xf0 ; N_PARAMS=4 & METHOD_INDEX & regParamC & regParamD & regParamE & regParamF
-# {
-# 	destination:4 = *[ram] ( ( 4 * METHOD_INDEX:4 ) + 0xe0000000 );
-# 	call [ destination ];
-# }
-# :invoke_direct_empty METHOD_INDEX,regParamC,regParamD,regParamE,regParamF,regParamG is inst0=0xf0 ; N_PARAMS=5 & METHOD_INDEX & regParamC & regParamD & regParamE & regParamF & regParamG
-# {
-# 	destination:4 = *[ram] ( ( 4 * METHOD_INDEX:4 ) + 0xe0000000 );
-# 	call [ destination ];
-# }
-
-
-# THIS ODEX INSTRUCTION WAS ADDED IN API version 14  (OS VERSIOn 4.0.x ICS)
-
-:invoke_object_init_range  B_BITS_0_15,A_BITS_0_7,registerC16  is inst0=0xf0 ; A_BITS_0_7 ; B_BITS_0_15 ; registerC16
-{
-	destination:4 = *[ram] ( ( 4 * B_BITS_0_15:4 ) + 0xe0000000 );
-	call [ destination ];
-}
-
-# 0xf0  iget-byte-quick  TODO All ART Versions
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:return_void_barrier  is  inst1=0xf1 & inst1_padding
-{
-	return [sp];#TODO
-}
-
-# 0xf1  iget-char-quick  TODO
-
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iget_quick "field@"^C_BITS_0_15,registerA4,registerB4  is inst0=0xf2 ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	registerA4 = getInstanceFieldQuick( registerB4, C_BITS_0_15:16 );
-}
-
-# 0xf2  iget-short-quick TODO
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iget_wide_quick "field@"^C_BITS_0_15,registerA4w,registerB4   is inst0=0xf3 ; registerA4w & registerB4 ; C_BITS_0_15 
-{
-	registerA4w = getInstanceFieldQuick( registerB4, C_BITS_0_15:16 );
-}
-
-# 0xf3  invoke-lambda  TODO
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iget_object_quick "field@"^C_BITS_0_15,registerA4,registerB4  is inst0=0xf4 ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	registerA4 = getInstanceFieldQuick( registerB4, C_BITS_0_15:16 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iput_quick "field@"^C_BITS_0_15,registerA4,registerB4  is inst0=0xf5 ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	setInstanceFieldQuick( registerB4, C_BITS_0_15:16, registerA4 );
-}
-
-# 0xf5  capture-variable  TODO
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iput_wide_quick "field@"^C_BITS_0_15,registerA4w,registerB4  is inst0=0xf6 ; registerA4w & registerB4 ; C_BITS_0_15 
-{
-	setInstanceFieldQuick( registerB4, C_BITS_0_15:16, registerA4w );
-}
-
-# 0xf6  create-lambda  TODO
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iput_object_quick "field@"^C_BITS_0_15,registerA4,registerB4  is inst0=0xf7 ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	setInstanceFieldQuick( registerB4, C_BITS_0_15:16, registerA4 );
-}
-
-# 0xf7  liberate-variable  TODO
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:invoke_virtual_quick "vtable@"^VTABLE_OFFSET is inst0=0xf8 ; N_PARAMS=0 & VTABLE_OFFSET
-{
-	invokeVirtualQuick( VTABLE_OFFSET:4 );
-}
-:invoke_virtual_quick "vtable@"^VTABLE_OFFSET,regParamC is inst0=0xf8 ; N_PARAMS=1 & VTABLE_OFFSET & regParamC
-{
-	invokeVirtualQuick( VTABLE_OFFSET:4, regParamC );
-}
-:invoke_virtual_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD is inst0=0xf8 ; N_PARAMS=2 & VTABLE_OFFSET & regParamC & regParamD
-{
-	invokeVirtualQuick( VTABLE_OFFSET:4, regParamC, regParamD );
-}
-:invoke_virtual_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD,regParamE is inst0=0xf8 ; N_PARAMS=3 & VTABLE_OFFSET & regParamC & regParamD & regParamE
-{
-	invokeVirtualQuick( VTABLE_OFFSET:4, regParamC, regParamD, regParamE );
-}
-:invoke_virtual_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD,regParamE,regParamF is inst0=0xf8 ; N_PARAMS=4 & VTABLE_OFFSET & regParamC & regParamD & regParamE & regParamF
-{
-	invokeVirtualQuick( VTABLE_OFFSET:4, regParamC, regParamD, regParamE, regParamF );
-}
-:invoke_virtual_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD,regParamE,regParamF,regParamG is inst0=0xf8 ; N_PARAMS=5 & VTABLE_OFFSET & regParamC & regParamD & regParamE & regParamF & regParamG
-{
-	invokeVirtualQuick( VTABLE_OFFSET:4, regParamC, regParamD, regParamE, regParamF, regParamG );
-
-}
-
-# 0xf8  box-lambda  TODO
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:invoke_virtual_quick_range "vtable@"^B_BITS_0_15,A_BITS_0_7,registerC16  is inst0=0xf9 ; A_BITS_0_7 ; B_BITS_0_15 ; registerC16
-{
-	invokeVirtualQuickRange( B_BITS_0_15:4, A_BITS_0_7:4, registerC16 );
-}
-
-# 0xf9  unbox-lambda  TODO
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:invoke_super_quick "vtable@"^VTABLE_OFFSET is inst0=0xfa ; N_PARAMS=0 & VTABLE_OFFSET
-{
-	invokeSuperQuick( VTABLE_OFFSET:4 );
-}
-:invoke_super_quick "vtable@"^VTABLE_OFFSET,regParamC is inst0=0xfa ; N_PARAMS=1 & VTABLE_OFFSET & regParamC
-{
-	invokeSuperQuick( VTABLE_OFFSET:4, regParamC );
-}
-:invoke_super_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD is inst0=0xfa ; N_PARAMS=2 & VTABLE_OFFSET & regParamC & regParamD
-{
-	invokeSuperQuick( VTABLE_OFFSET:4, regParamC, regParamD );
-}
-:invoke_super_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD,regParamE is inst0=0xfa ; N_PARAMS=3 & VTABLE_OFFSET & regParamC & regParamD & regParamE
-{
-	invokeSuperQuick( VTABLE_OFFSET:4, regParamC, regParamD, regParamE );
-}
-:invoke_super_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD,regParamE,regParamF is inst0=0xfa ; N_PARAMS=4 & VTABLE_OFFSET & regParamC & regParamD & regParamE & regParamF
-{
-	invokeSuperQuick( VTABLE_OFFSET:4, regParamC, regParamD, regParamE, regParamF );
-}
-:invoke_super_quick "vtable@"^VTABLE_OFFSET,regParamC,regParamD,regParamE,regParamF,regParamG is inst0=0xfa ; N_PARAMS=5 & VTABLE_OFFSET & regParamC & regParamD & regParamE & regParamF & regParamG
-{
-	invokeSuperQuick( VTABLE_OFFSET:4, regParamC, regParamD, regParamE, regParamF, regParamG );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:invoke_super_quick_range "vtable@"^B_BITS_0_15,A_BITS_0_7,registerC16  is inst0=0xfb ; A_BITS_0_7 ; B_BITS_0_15 ; registerC16
-{
-	invokeSuperQuickRange( B_BITS_0_15:4, A_BITS_0_7:4, registerC16 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:iput_object_volatile registerA4,registerB4,C_BITS_0_15 is inst0=0xfc ; registerA4 & registerB4 ; C_BITS_0_15 
-{
-	setInstanceFieldVolatile( registerB4, C_BITS_0_15:16, registerA4 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:sget_object_volatile registerA8,B_BITS_0_15 is inst0=0xfd ; registerA8 ; B_BITS_0_15 
-{
-	registerA8 = getStaticFieldVolatile( B_BITS_0_15:16 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-:sput_object_volatile registerA8,B_BITS_0_15 is inst0=0xfe ; registerA8 ; B_BITS_0_15 
-{
-	setStaticFieldVolatile( B_BITS_0_15:16, registerA8 );
-}
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-
-# 0xff ?
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
