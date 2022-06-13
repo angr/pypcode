@@ -5,9 +5,10 @@ pypcode
 
 Machine code disassembly and IR translation library for Python using the
 excellent [SLEIGH](https://ghidra.re/courses/languages/html/sleigh.html)
-library from the [Ghidra](https://ghidra-sre.org/) framework. Primarily for use
-in [angr](http://angr.io), which provides analyses and symbolic execution of
-p-code.
+library from the [Ghidra](https://ghidra-sre.org/) framework.
+
+This library was created primarily for use with [angr](http://angr.io), which
+provides analyses and symbolic execution of p-code.
 
 Quick Start
 -----------
@@ -28,7 +29,8 @@ pip3 install --user git+https://github.com/angr/pypcode
 
 You can now invoke the `pypcode` module from command line to translate supported
 machine code to P-code from command line. Run `python -m pypcode --help` for
-usage information. See module source for examples of using pypcode as a library.
+usage information. See module source (`__main__.py`) for examples of using
+pypcode as a library.
 
 Example
 -------
