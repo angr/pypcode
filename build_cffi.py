@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os.path
-import platform
 import struct
 import subprocess
 import platform
@@ -38,7 +37,7 @@ class FfiPreBuildExtension(build_ext):
           'Darwin'  : ''
         }[platform.system()]
         sleigh_bin = os.path.join(SLEIGH_BUILD_DIR, 'bin', 'sleigh' + bin_ext)
-        specfiles_dir = os.path.join(self.build_lib, 'pypcode', 'processors')
+        specfiles_dir = os.path.join(ROOT_DIR if self.inplace else self.build_lib, 'pypcode', 'processors')
         subprocess.check_call([sleigh_bin, '-a', specfiles_dir])
 
         ffi.cdef(open(os.path.join(SLEIGH_BUILD_DIR, "csleigh.i")).read())
