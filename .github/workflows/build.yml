@@ -26,6 +26,7 @@ jobs:
       matrix:
         include:
           - { os: macos-latest,   wheel: cp38-macosx_x86_64 }
+          - { os: macos-latest,   wheel: cp38-macosx_arm64 }
           - { os: windows-latest, wheel: cp38-win_amd64 }
           - { os: windows-latest, wheel: cp38-win32 }
           - { os: ubuntu-latest,  wheel: cp38-manylinux_x86_64 }
@@ -35,6 +36,7 @@ jobs:
           - { os: ubuntu-latest,  wheel: pp38-manylinux_x86_64 }
 
           - { os: macos-latest,   wheel: cp39-macosx_x86_64 }
+          - { os: macos-latest,   wheel: cp39-macosx_arm64 }
           - { os: windows-latest, wheel: cp39-win_amd64 }
           - { os: windows-latest, wheel: cp39-win32 }
           - { os: ubuntu-latest,  wheel: cp39-manylinux_x86_64 }
@@ -44,6 +46,7 @@ jobs:
           - { os: ubuntu-latest,  wheel: pp39-manylinux_x86_64 }
 
           - { os: macos-latest,   wheel: cp310-macosx_x86_64 }
+          - { os: macos-latest,   wheel: cp310-macosx_arm64 }
           - { os: windows-latest, wheel: cp310-win_amd64 }
           - { os: windows-latest, wheel: cp310-win32 }
           - { os: ubuntu-latest,  wheel: cp310-manylinux_x86_64 }
@@ -65,11 +68,13 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse ${{ env.PKG }}
         env:
+          CIBW_ARCHS_MACOS: x86_64 arm64
           CIBW_BUILD: ${{ matrix.wheel }}
           # manylinux container has an old cmake. Simply grab recent cmake from
           # pypi. Other platforms use recent cmake provided by GH actions host.
           CIBW_BEFORE_BUILD_LINUX: pip install cmake
           CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
+          CIBW_TEST_SKIP: '*_arm64'
           CIBW_BUILD_VERBOSITY: 1
       - uses: actions/upload-artifact@v2
         with:
