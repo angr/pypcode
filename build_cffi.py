@@ -31,11 +31,7 @@ class FfiPreBuildExtension(build_ext):
         subprocess.check_call(['cmake', '--build', 'build', '--parallel', '--verbose'] + cmake_build_args, cwd=LIB_SRC_DIR)
 
         # Build sla files
-        bin_ext = {
-          'Windows' : '.exe',
-          'Linux'   : '',
-          'Darwin'  : ''
-        }[platform.system()]
+        bin_ext = '.exe' if platform.system() == 'Windows' else ''
         sleigh_bin = os.path.join(SLEIGH_BUILD_DIR, 'bin', 'sleigh' + bin_ext)
         specfiles_dir = os.path.join(ROOT_DIR if self.inplace else self.build_lib, 'pypcode', 'processors')
         subprocess.check_call([sleigh_bin, '-a', specfiles_dir])
@@ -46,10 +42,9 @@ def ffibuilder():
     from cffi import FFI
     ffi = FFI()
     LIBS = {
-        'Windows': [],
         'Darwin': ['c++'],
         'Linux': ['stdc++']
-    }[platform.system()]
+    }.get(platform.system(), [])
     ffi.set_source("pypcode._csleigh",
         """
         #include "build/csleigh.i"
