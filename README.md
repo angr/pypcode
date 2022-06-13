@@ -4,9 +4,10 @@ pypcode
 [![Build Status](https://github.com/angr/pypcode/actions/workflows/build.yml/badge.svg?branch=master&event=push)](https://github.com/angr/pypcode/actions/workflows/build.yml)
 
 Machine code disassembly and IR translation library for Python using the
-excellent [SLEIGH](https://ghidra.re/courses/languages/html/sleigh.html) library
-from the [Ghidra](https://ghidra-sre.org/) framework. Primarily for use in
-[angr](http://angr.io).
+excellent [SLEIGH](https://ghidra.re/courses/languages/html/sleigh.html)
+library from the [Ghidra](https://ghidra-sre.org/) framework. Primarily for use
+in [angr](http://angr.io), which provides analyses and symbolic execution of
+p-code.
 
 Quick Start
 -----------
