@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <unordered_set>
+#include <memory>
 #include "sleigh/loadimage.hh"
 #include "sleigh/sleigh.hh"
 #include "csleigh.h"
