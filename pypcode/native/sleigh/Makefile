@@ -12,7 +12,7 @@ GHIDRA_BIN=../../../../../../../ghidra.bin
 OS = $(shell uname -s)
 CPU = $(shell uname -m)
 
-# TODO: need to revise to support arm64/aarch64 arch - improve on both OS and arch detection
+# TODO: need to revise to support arm64/aarch64 arch - improve on both OS and arch detection 
 
 ifeq ($(OS),Linux)
 # Allow ARCH to be specified externally so we can build for 32-bit from a 64-bit Linux
@@ -77,12 +77,12 @@ EXTERNAL_CONSOLEEXT_NAMES=$(subst .cc,,$(notdir $(EXTERNAL_CONSOLEEXT_SOURCE)))
 
 # The following macros partition all the source files, there should be no overlaps
 # Some core source files used in all projects
-CORE=	xml space float address pcoderaw translate opcodes globalcontext
+CORE=	xml marshal space float address pcoderaw translate opcodes globalcontext
 # Additional core files for any projects that decompile
 DECCORE=capability architecture options graph cover block cast typeop database cpool \
 	comment stringmanage fspec action loadimage grammar varnode op \
 	type variable varmap jumptable emulate emulateutil flow userop \
-	funcdata funcdata_block funcdata_op funcdata_varnode pcodeinject \
+	funcdata funcdata_block funcdata_op funcdata_varnode unionresolve pcodeinject \
 	heritage prefersplit rangeutil ruleaction subflow blockaction merge double \
 	transform coreaction condexe override dynamic crc32 prettyprint \
 	printlanguage printc printjava memstate opbehavior paramid $(COREEXT_NAMES)
@@ -119,7 +119,7 @@ COMMANDLINE_NAMES=$(CORE) $(DECCORE) $(EXTRA) $(SLEIGH) consolemain
 COMMANDLINE_DEBUG=-DCPUI_DEBUG -D__TERMINAL__
 COMMANDLINE_OPT=-D__TERMINAL__
 
-TEST_NAMES=$(CORE) $(DECCORE) $(SLEIGH) $(EXTRA) test
+TEST_NAMES=$(CORE) $(DECCORE) $(SLEIGH) $(EXTRA) test 
 TEST_DEBUG=-D__TERMINAL__
 
 GHIDRA_NAMES=$(CORE) $(DECCORE) $(GHIDRA)
@@ -333,7 +333,7 @@ tags:
 
 # Rules to build the different dependency files
 com_dbg/depend:	$(COMMANDLINE_NAMES:%=%.cc)
-	mkdir -p com_dbg
+	mkdir -p com_dbg 
 	@set -e; rm -f $@; \
 	$(CXX) -MM $(COMMANDLINE_DEBUG) $^ > $@.$$$$; \
 	sed 's,\(.*\)\.o[ :]*,com_dbg/\1.o $@ : ,g' < $@.$$$$ > $@; \
@@ -361,7 +361,7 @@ ghi_dbg/depend:	$(GHIDRA_NAMES_DBG:%=%.cc)
 	rm -f $@.$$$$
 
 ghi_opt/depend:	$(GHIDRA_NAMES:%=%.cc)
-	mkdir -p ghi_opt
+	mkdir -p ghi_opt 
 	@set -e; rm -f $@; \
 	$(CXX) -MM $(GHIDRA_OPT) $^ > $@.$$$$; \
 	sed 's,\(.*\)\.o[ :]*,ghi_opt/\1.o $@ : ,g' < $@.$$$$ > $@; \

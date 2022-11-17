@@ -27,6 +27,7 @@ set(SLEIGH_COMMON
 	sleigh/context.cc
 	sleigh/float.cc
 	sleigh/globalcontext.cc
+	sleigh/marshal.cc
 	sleigh/opcodes.cc
 	sleigh/pcodecompile.cc
 	sleigh/pcodeparse.cc
