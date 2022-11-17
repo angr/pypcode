@@ -4,7 +4,7 @@ pypcode
 
 Machine code disassembly and IR translation library for Python using the
 excellent [SLEIGH](https://ghidra.re/courses/languages/html/sleigh.html)
-library from the [Ghidra](https://ghidra-sre.org/) framework.
+library from the [Ghidra](https://ghidra-sre.org/) framework (version 10.2.2).
 
 This library was created primarily for use with [angr](http://angr.io), which
 provides analyses and symbolic execution of p-code.
