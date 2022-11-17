@@ -251,6 +251,10 @@ public:
 
     bool loadSlaFile(const char *path)
     {
+        // FIXME: Globals...
+        AttributeId::initialize();
+        ElementId::initialize();
+
         LOG("%p Loading slafile...", this);
         // FIXME: try/catch XmlError
         m_document = m_document_storage.openDocument(path);
