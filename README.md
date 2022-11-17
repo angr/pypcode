@@ -12,7 +12,7 @@ provides analyses and symbolic execution of p-code.
 Quick Start
 -----------
 This package can be installed on Linux, macOS, and Windows platforms for recent
-(3.6+) versions of both CPython and PyPy. Wheels are provided for several
+(3.8+) versions of both CPython and PyPy. Wheels are provided for several
 configurations. You can install the latest release from PyPI using `pip`:
 
 ```bash
