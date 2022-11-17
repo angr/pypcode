@@ -1,7 +1,6 @@
 pypcode
 =======
 [![pypi](https://img.shields.io/pypi/v/pypcode)](https://pypi.org/project/pypcode/)
-[![Build Status](https://github.com/angr/pypcode/actions/workflows/build.yml/badge.svg?branch=master&event=push)](https://github.com/angr/pypcode/actions/workflows/build.yml)
 
 Machine code disassembly and IR translation library for Python using the
 excellent [SLEIGH](https://ghidra.re/courses/languages/html/sleigh.html)
