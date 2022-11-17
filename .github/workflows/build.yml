@@ -28,32 +28,12 @@ jobs:
       matrix:
         include:
           - { os: macos-latest,   wheel: cp38-macosx_x86_64 }
+          - { os: macos-latest,   wheel: pp38-macosx_x86_64 }
           - { os: macos-latest,   wheel: cp38-macosx_arm64 }
           - { os: windows-latest, wheel: cp38-win_amd64 }
-          - { os: ubuntu-latest,  wheel: cp38-manylinux_x86_64 }
-
-          - { os: macos-latest,   wheel: pp38-macosx_x86_64 }
           - { os: windows-latest, wheel: pp38-win_amd64 }
+          - { os: ubuntu-latest,  wheel: cp38-manylinux_x86_64 }
           - { os: ubuntu-latest,  wheel: pp38-manylinux_x86_64 }
-
-          - { os: macos-latest,   wheel: cp39-macosx_x86_64 }
-          - { os: macos-latest,   wheel: cp39-macosx_arm64 }
-          - { os: windows-latest, wheel: cp39-win_amd64 }
-          - { os: ubuntu-latest,  wheel: cp39-manylinux_x86_64 }
-
-          - { os: macos-latest,   wheel: pp39-macosx_x86_64 }
-          - { os: windows-latest, wheel: pp39-win_amd64 }
-          - { os: ubuntu-latest,  wheel: pp39-manylinux_x86_64 }
-
-          - { os: macos-latest,   wheel: cp310-macosx_x86_64 }
-          - { os: macos-latest,   wheel: cp310-macosx_arm64 }
-          - { os: windows-latest, wheel: cp310-win_amd64 }
-          - { os: ubuntu-latest,  wheel: cp310-manylinux_x86_64 }
-
-          - { os: macos-latest,   wheel: cp311-macosx_x86_64 }
-          - { os: macos-latest,   wheel: cp311-macosx_arm64 }
-          - { os: windows-latest, wheel: cp311-win_amd64 }
-          - { os: ubuntu-latest,  wheel: cp311-manylinux_x86_64 }
 
     steps:
       - uses: actions/setup-python@v4
