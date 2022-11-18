@@ -17,7 +17,7 @@ PKG_SRC_DIR = os.path.abspath(os.path.dirname(__file__))
 SPECFILES_DIR = os.path.join(PKG_SRC_DIR, 'processors')
 
 
-def gen_enum(pyname: str, cprefix: str):
+def _gen_enum(pyname: str, cprefix: str):
     """
     Wrangle prefixed C enum names into a Python enum type, e.g.:
 
@@ -29,12 +29,14 @@ def gen_enum(pyname: str, cprefix: str):
 
     Provide destination type name in `pyname` and `cprefix` (e.g. csleigh_CPUI_).
     """
-    return Enum(pyname, {n[len(cprefix):]: v
-                         for n, v in globals().items() if n.startswith(cprefix)})
+    e = Enum(pyname, {n[len(cprefix):]: v
+                      for n, v in globals().items() if n.startswith(cprefix)})
+    e.__doc__ = f'1:1 mapping of C enumeration `{cprefix}*` to `{pyname}*`'
+    return e
 
 
-OpCode = gen_enum('OpCode', 'csleigh_CPUI_')
-SleighErrorType = gen_enum('SleighErrorType', 'csleigh_ERROR_TYPE_')
+OpCode = _gen_enum('OpCode', 'csleigh_CPUI_')
+SleighErrorType = _gen_enum('SleighErrorType', 'csleigh_ERROR_TYPE_')
 
 
 class ArchLanguage:
