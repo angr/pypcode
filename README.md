@@ -16,14 +16,14 @@ This package can be installed on Linux, macOS, and Windows platforms for recent
 configurations. You can install the latest release from PyPI using `pip`:
 
 ```bash
-pip3 install pypcode
+pip install pypcode
 ```
 
 You can also install the very latest development version from this repository
 using `pip`:
 
 ```bash
-pip3 install --user git+https://github.com/angr/pypcode
+pip install --user git+https://github.com/angr/pypcode
 ```
 
 You can now invoke the `pypcode` module from command line to translate supported
