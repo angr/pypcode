@@ -23,7 +23,7 @@ You can also install the very latest development version from this repository
 using `pip`:
 
 ```bash
-pip install --user git+https://github.com/angr/pypcode
+pip install --user https://github.com/angr/pypcode/archive/refs/heads/master.zip
 ```
 
 You can now invoke the `pypcode` module from command line to translate supported
