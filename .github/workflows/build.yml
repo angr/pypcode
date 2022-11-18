@@ -83,8 +83,7 @@ jobs:
   deploy_docs:
     name: Deploy docs to GitHub pages
     needs: [build_docs, build_wheels]
-    # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       pages: write
