@@ -3,11 +3,14 @@ import os.path
 import struct
 import subprocess
 import platform
-from distutils.command.build_ext import build_ext
+
+from setuptools.command.build_ext import build_ext
+
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 LIB_SRC_DIR = os.path.join(ROOT_DIR, 'pypcode', 'native')
 SLEIGH_BUILD_DIR = os.path.join(LIB_SRC_DIR, 'build')
+
 
 class FfiPreBuildExtension(build_ext):
     def pre_run(self, ext, ffi):
@@ -38,6 +41,7 @@ class FfiPreBuildExtension(build_ext):
 
         ffi.cdef(open(os.path.join(SLEIGH_BUILD_DIR, "csleigh.i")).read())
 
+
 def ffibuilder():
     from cffi import FFI
     ffi = FFI()
@@ -53,6 +57,7 @@ def ffibuilder():
         include_dirs=[LIB_SRC_DIR],
         library_dirs=[os.path.join(SLEIGH_BUILD_DIR, 'lib')])
     return ffi
+
 
 if __name__ == "__main__":
     ffibuilder().compile(verbose=True)
