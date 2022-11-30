@@ -59,12 +59,50 @@ jobs:
           CIBW_ARCHS_MACOS: x86_64 arm64
           CIBW_BUILD: ${{ matrix.wheel }}
           CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
-          CIBW_TEST_SKIP: '*_arm64'
+          CIBW_TEST_SKIP: "cp* *_arm64"
           CIBW_BUILD_VERBOSITY: 1
       - uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: ./wheelhouse/*.whl
+
+  # CPython wheels are ABI3 compatible and should work on 3.*,>=3.8
+  test_wheels:
+    needs: build_wheels
+    name: Test wheel on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - { os: macos-latest,   py: '3.8' }
+          - { os: macos-latest,   py: '3.11' }
+          - { os: windows-latest, py: '3.8' }
+          - { os: windows-latest, py: '3.11' }
+          - { os: ubuntu-latest,  py: '3.8' }
+          - { os: ubuntu-latest,  py: '3.11' }
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: source
+          path: dist
+      - uses: actions/download-artifact@v3
+        with:
+          name: wheels
+          path: dist
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.py }}
+      - name: Run tests
+        shell: bash
+        run: |
+          tar --strip-components 1 -xvf ./dist/*.tar.gz
+          ls dist
+
+          pip install cffi
+          pip install --no-index --find-links ./dist pypcode
+
+          pushd tests
+          python -m unittest discover -v -s .
 
   build_docs:
     name: Build docs
@@ -84,7 +122,7 @@ jobs:
 
   deploy_docs:
     name: Deploy docs to GitHub pages
-    needs: [build_docs, build_wheels]
+    needs: [build_docs, build_wheels, test_wheels]
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -99,7 +137,7 @@ jobs:
 
   upload_pypi:
     name: Upload wheels to PyPI
-    needs: [build_wheels, build_sdist]
+    needs: [build_sdist, build_wheels, test_wheels]
     runs-on: ubuntu-latest
     # upload to PyPI on every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
