@@ -41,7 +41,7 @@ except ImportError:
 
 setup(name='pypcode',
       version='1.1.1.dev0',
-      description='Python bindings to Ghidra\'s SLEIGH library',
+      description="Python bindings to Ghidra's SLEIGH library",
       long_description=long_description,
       long_description_content_type='text/markdown',
       author='Matt Borgerson',
