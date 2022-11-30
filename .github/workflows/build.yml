@@ -66,10 +66,11 @@ jobs:
           name: wheels
           path: ./wheelhouse/*.whl
 
-  # CPython wheels are ABI3 compatible and should work on 3.*,>=3.8
+  # CPython wheels are abi3 compatible and should work on 3.*,>=3.8
+  # Note: PyPy wheels are tested above with CIBW
   test_wheels:
     needs: build_wheels
-    name: Test wheel on ${{ matrix.os }}
+    name: Test with CPython ${{ matrix.py }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
