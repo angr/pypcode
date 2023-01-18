@@ -143,7 +143,7 @@
     <external_name tool="IDA-PRO" name="ppc"/>
     <external_name tool="DWARF.register.mapping.file" name="ppc.dwarf"/>
   </language>
-   <language processor="PowerPC"
+  <language processor="PowerPC"
             endian="big"
             size="32"
             variant="PowerQUICC-III"
@@ -206,6 +206,24 @@
     <external_name tool="IDA-PRO" name="ppc"/>
     <external_name tool="DWARF.register.mapping.file" name="ppc.dwarf"/>
   </language>
+
+  <language processor="PowerPC"
+            endian="big"
+            size="32"
+            variant="PowerPC-e200"
+            version="1.5"
+            slafile="ppc_32_e200.sla"
+            processorspec="ppc_32_e200.pspec"
+            manualindexfile="../manuals/PowerPC.idx"
+            id="PowerPC:BE:32:e200">
+    <description>Power ISA e200 32-bit big-endian embedded core w/VLE</description>
+    <truncate_space space="ram" size="4"/>
+    <compiler name="default" spec="ppc_32_e200.cspec" id="default"/>
+    <external_name tool="gnu" name="powerpc:e200"/>
+    <external_name tool="IDA-PRO" name="ppc"/>
+    <external_name tool="DWARF.register.mapping.file" name="ppc.dwarf"/>
+  </language>
+
   <language processor="PowerPC"
             endian="big"
             size="32"
