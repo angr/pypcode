@@ -10,3 +10,4 @@
 
 @include "ppc_common.sinc"
 @include "ppc_vle.sinc"
+@include "evx.sinc"
