@@ -57,4 +57,5 @@ setup(
     cffi_modules=["build_cffi.py:ffibuilder"],
     cmdclass=cmdclass,
     python_requires=">=3.8",
+    extras_require={"docs": ["sphinx", "sphinx-autodoc-typehints", "myst-parser", "furo"]},
 )

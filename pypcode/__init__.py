@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """
 Pythonic interface to SLEIGH by way of the csleigh C API wrapper and CFFI.
-
-.. include:: ../README.md
 """
 
 import os.path
