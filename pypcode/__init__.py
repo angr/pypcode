@@ -14,7 +14,7 @@ from ._csleigh import ffi
 from ._csleigh.lib import *
 
 PKG_SRC_DIR = os.path.abspath(os.path.dirname(__file__))
-SPECFILES_DIR = os.path.join(PKG_SRC_DIR, 'processors')
+SPECFILES_DIR = os.path.join(PKG_SRC_DIR, "processors")
 
 
 def _gen_enum(pyname: str, cprefix: str):
@@ -29,14 +29,16 @@ def _gen_enum(pyname: str, cprefix: str):
 
     Provide destination type name in `pyname` and `cprefix` (e.g. csleigh_CPUI_).
     """
-    e = Enum(pyname, {n[len(cprefix):]: v
-                      for n, v in globals().items() if n.startswith(cprefix)})
-    e.__doc__ = f'1:1 mapping of C enumeration `{cprefix}*` to `{pyname}*`'
+    e = Enum(
+        pyname,
+        {n[len(cprefix) :]: v for n, v in globals().items() if n.startswith(cprefix)},
+    )
+    e.__doc__ = f"1:1 mapping of C enumeration `{cprefix}*` to `{pyname}*`"
     return e
 
 
-OpCode = _gen_enum('OpCode', 'csleigh_CPUI_')
-SleighErrorType = _gen_enum('SleighErrorType', 'csleigh_ERROR_TYPE_')
+OpCode = _gen_enum("OpCode", "csleigh_CPUI_")
+SleighErrorType = _gen_enum("SleighErrorType", "csleigh_ERROR_TYPE_")
 
 
 class ArchLanguage:
@@ -71,7 +73,7 @@ class ArchLanguage:
 
     @property
     def description(self) -> str:
-        return self.ldef.find('description').text
+        return self.ldef.find("description").text
 
     def __getattr__(self, key):
         if key in self.ldef.attrib:
@@ -88,22 +90,22 @@ class ArchLanguage:
     def cspecs(self) -> Mapping[Tuple[str, str], ET.Element]:
         if self._cspecs is None:
             self._cspecs = {}
-            for e in self.ldef.findall('compiler'):
-                path = os.path.join(self.archdir, e.attrib['spec'])
+            for e in self.ldef.findall("compiler"):
+                path = os.path.join(self.archdir, e.attrib["spec"])
                 cspec = ET.parse(path).getroot()
-                self._cspecs[(e.attrib['id'], e.attrib['name'])] = cspec
+                self._cspecs[(e.attrib["id"], e.attrib["name"])] = cspec
         return self._cspecs
 
-    def init_context_from_pspec(self, ctx: 'csleigh_Context') -> None:
-        cd = self.pspec.find('context_data')
+    def init_context_from_pspec(self, ctx: "csleigh_Context") -> None:
+        cd = self.pspec.find("context_data")
         if cd is None:
             return
-        cs = cd.find('context_set')
+        cs = cd.find("context_set")
         if cs is None:
             return
         for e in cs:
-            assert e.tag == 'set'
-            csleigh_setVariableDefault(ctx, e.attrib['name'].encode('utf-8'), int(e.attrib['val']))
+            assert e.tag == "set"
+            csleigh_setVariableDefault(ctx, e.attrib["name"].encode("utf-8"), int(e.attrib["val"]))
 
 
 class Arch:
@@ -133,7 +135,7 @@ class Arch:
         self.languages = [ArchLanguage(self.archpath, e) for e in self.ldef.getroot()]
 
     @classmethod
-    def enumerate(cls) -> Generator['Arch', None, None]:
+    def enumerate(cls) -> Generator["Arch", None, None]:
         """
         Enumerate all available architectures and languages.
 
@@ -141,11 +143,11 @@ class Arch:
         can be found in processors/<architecture>/data/languages/<variant>.ldefs
         """
         for archname in os.listdir(SPECFILES_DIR):
-            langdir = os.path.join(SPECFILES_DIR, archname, 'data', 'languages')
+            langdir = os.path.join(SPECFILES_DIR, archname, "data", "languages")
             if not (os.path.exists(langdir) and os.path.isdir(langdir)):
                 continue
             for langname in os.listdir(langdir):
-                if not langname.endswith('.ldefs'):
+                if not langname.endswith(".ldefs"):
                     continue
                 ldefpath = os.path.join(langdir, langname)
                 yield Arch(archname, ldefpath)
@@ -157,20 +159,20 @@ class Context:
     """
 
     __slots__ = (
-        'lang',
-        'ctx_c',
-        '_cached_addr_spaces',
-        'registers',
+        "lang",
+        "ctx_c",
+        "_cached_addr_spaces",
+        "registers",
     )
 
     lang: ArchLanguage
-    ctx_c: 'csleigh_Context'
-    _cached_addr_spaces: Mapping['csleigh_AddrSpace', 'AddrSpace']
+    ctx_c: "csleigh_Context"
+    _cached_addr_spaces: Mapping["csleigh_AddrSpace", "AddrSpace"]
 
     def __init__(self, lang: ArchLanguage):
         self._cached_addr_spaces = {}
         self.lang = lang
-        self.ctx_c = csleigh_createContext(self.lang.slafile_path.encode('utf-8'))
+        self.ctx_c = csleigh_createContext(self.lang.slafile_path.encode("utf-8"))
         self.lang.init_context_from_pspec(self.ctx_c)
 
         count_a = ffi.new("unsigned int *count")
@@ -178,29 +180,35 @@ class Context:
 
         self.registers = {}
         for i in range(count_a[0]):
-            reg_name = ffi.string(regs[i].name).decode('utf-8')
+            reg_name = ffi.string(regs[i].name).decode("utf-8")
             reg_vn = Varnode.from_c(self, regs[i].varnode)
             self.registers[reg_name] = reg_vn
 
     def __del__(self):
         csleigh_destroyContext(self.ctx_c)
 
-    def get_cached_addr_space(self, cobj: 'csleigh_AddrSpace') -> 'AddrSpace':
+    def get_cached_addr_space(self, cobj: "csleigh_AddrSpace") -> "AddrSpace":
         """
         Used during translation to cache unchanging address space objects. Should
         not be called by pypcode users.
         """
         return self._cached_addr_spaces.get(cobj)
 
-    def set_cached_addr_space(self, cobj: 'csleigh_AddrSpace', pobj: 'AddrSpace') -> None:
+    def set_cached_addr_space(self, cobj: "csleigh_AddrSpace", pobj: "AddrSpace") -> None:
         """
         Used during translation to cache unchanging address space objects. Should
         not be called by pypcode users.
         """
         self._cached_addr_spaces[cobj] = pobj
 
-    def translate(self, code: Union[bytes, bytearray], base: int, max_inst: int = 0, max_bytes: int = 0,
-                  bb_terminating: bool = False) -> 'TranslationResult':
+    def translate(
+        self,
+        code: Union[bytes, bytearray],
+        base: int,
+        max_inst: int = 0,
+        max_bytes: int = 0,
+        bb_terminating: bool = False,
+    ) -> "TranslationResult":
         """
         Disassemble and translate to p-code.
 
@@ -217,12 +225,11 @@ class Context:
         csleigh_freeResult(res_c)
         return res
 
-    def get_register_name(self, space: 'AddrSpace', offset: int, size: int) -> str:
+    def get_register_name(self, space: "AddrSpace", offset: int, size: int) -> str:
         """
         Call SleighBase::getRegisterName in this context.
         """
-        return ffi.string(csleigh_Sleigh_getRegisterName(
-            self.ctx_c, space.to_c(), offset, size)).decode('utf-8')
+        return ffi.string(csleigh_Sleigh_getRegisterName(self.ctx_c, space.to_c(), offset, size)).decode("utf-8")
 
 
 class ContextObj:
@@ -230,9 +237,7 @@ class ContextObj:
     Base class for objects that are context-sensitive.
     """
 
-    __slots__ = (
-        'ctx',
-    )
+    __slots__ = ("ctx",)
 
     ctx: Context
 
@@ -246,31 +251,31 @@ class AddrSpace(ContextObj):
     """
 
     __slots__ = (
-        'cobj',
-        'name',
+        "cobj",
+        "name",
     )
 
-    cobj: 'csleigh_AddrSpace'
+    cobj: "csleigh_AddrSpace"
     name: str
 
-    def __init__(self, ctx: Context, cobj: 'csleigh_AddrSpace'):
+    def __init__(self, ctx: Context, cobj: "csleigh_AddrSpace"):
         super().__init__(ctx)
         self.cobj = cobj
-        self.name = ffi.string(csleigh_AddrSpace_getName(cobj)).decode('utf-8')
+        self.name = ffi.string(csleigh_AddrSpace_getName(cobj)).decode("utf-8")
 
     @classmethod
-    def from_c_uncached(cls, ctx: Context, cobj: 'csleigh_AddrSpace') -> 'AddrSpace':
+    def from_c_uncached(cls, ctx: Context, cobj: "csleigh_AddrSpace") -> "AddrSpace":
         return cls(ctx, cobj)
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_AddrSpace') -> 'AddrSpace':
+    def from_c(cls, ctx: Context, cobj: "csleigh_AddrSpace") -> "AddrSpace":
         obj = ctx.get_cached_addr_space(cobj)
         if obj is None:
             obj = cls.from_c_uncached(ctx, cobj)
             ctx.set_cached_addr_space(cobj, obj)
         return obj
 
-    def to_c(self) -> 'csleigh_AddrSpace':
+    def to_c(self) -> "csleigh_AddrSpace":
         return self.cobj
 
 
@@ -280,8 +285,8 @@ class Address(ContextObj):
     """
 
     __slots__ = (
-        'space',
-        'offset',
+        "space",
+        "offset",
     )
 
     space: AddrSpace
@@ -293,13 +298,13 @@ class Address(ContextObj):
         self.offset = offset
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_Address') -> 'Address':
+    def from_c(cls, ctx: Context, cobj: "csleigh_Address") -> "Address":
         return cls(ctx, AddrSpace.from_c(ctx, cobj.space), cobj.offset)
 
-    def to_c(self) -> 'csleigh_Address':
+    def to_c(self) -> "csleigh_Address":
         # XXX: The boxing in AddrSpace/Address is a little excessive, but lets us
         # access the API as provided by SLEIGH, and should still be fast.
-        cobj = ffi.new('csleigh_Address *')
+        cobj = ffi.new("csleigh_Address *")
         cobj.space = self.space.to_c()
         cobj.offset = self.offset
         return cobj
@@ -325,9 +330,9 @@ class Varnode(ContextObj):
     """
 
     __slots__ = (
-        'space',
-        'offset',
-        'size',
+        "space",
+        "offset",
+        "size",
     )
 
     space: AddrSpace
@@ -341,11 +346,11 @@ class Varnode(ContextObj):
         self.size = size
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_Varnode') -> 'Varnode':
+    def from_c(cls, ctx: Context, cobj: "csleigh_Varnode") -> "Varnode":
         return cls(ctx, AddrSpace.from_c(ctx, cobj.space), cobj.offset, cobj.size)
 
     def __str__(self):
-        return '%s[%#x:%d]' % (self.space.name, self.offset, self.size)
+        return "%s[%#x:%d]" % (self.space.name, self.offset, self.size)
 
     def get_addr(self) -> Address:
         return Address(self.ctx, self.space, self.offset)
@@ -371,9 +376,9 @@ class SeqNum(ContextObj):
     """
 
     __slots__ = (
-        'pc',
-        'uniq',
-        'order',
+        "pc",
+        "uniq",
+        "order",
     )
 
     pc: Address
@@ -387,7 +392,7 @@ class SeqNum(ContextObj):
         self.order = order
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_SeqNum') -> 'SeqNum':
+    def from_c(cls, ctx: Context, cobj: "csleigh_SeqNum") -> "SeqNum":
         return cls(ctx, Address.from_c(ctx, cobj.pc), cobj.uniq, cobj.order)
 
 
@@ -397,10 +402,10 @@ class PcodeOp(ContextObj):
     """
 
     __slots__ = (
-        'seq',
-        'opcode',
-        'output',
-        'inputs',
+        "seq",
+        "opcode",
+        "output",
+        "inputs",
     )
 
     seq: SeqNum
@@ -408,8 +413,14 @@ class PcodeOp(ContextObj):
     output: Optional[Varnode]
     inputs: Sequence[Varnode]
 
-    def __init__(self, ctx: Context, seq: SeqNum, opcode: OpCode,
-                 inputs: Sequence[Varnode], output: Optional[Varnode] = None):
+    def __init__(
+        self,
+        ctx: Context,
+        seq: SeqNum,
+        opcode: OpCode,
+        inputs: Sequence[Varnode],
+        output: Optional[Varnode] = None,
+    ):
         super().__init__(ctx)
         self.seq = seq
         self.opcode = opcode
@@ -417,15 +428,19 @@ class PcodeOp(ContextObj):
         self.inputs = inputs
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_PcodeOp') -> 'PcodeOp':
-        return cls(ctx, SeqNum.from_c(ctx, cobj.seq), OpCode(cobj.opcode),
-                   [Varnode.from_c(ctx, cobj.inputs[i]) for i in range(cobj.inputs_count)],
-                   Varnode.from_c(ctx, cobj.output) if cobj.output else None)
+    def from_c(cls, ctx: Context, cobj: "csleigh_PcodeOp") -> "PcodeOp":
+        return cls(
+            ctx,
+            SeqNum.from_c(ctx, cobj.seq),
+            OpCode(cobj.opcode),
+            [Varnode.from_c(ctx, cobj.inputs[i]) for i in range(cobj.inputs_count)],
+            Varnode.from_c(ctx, cobj.output) if cobj.output else None,
+        )
 
     def __str__(self):
-        s = ''
+        s = ""
         if self.output:
-            s += str(self.output) + ' = '
+            s += str(self.output) + " = "
         s += f'{self.opcode.name} {", ".join(str(i) for i in self.inputs)}'
         return s
 
@@ -437,9 +452,9 @@ class OpFormat:
 
     @staticmethod
     def fmt_vn(vn: Varnode) -> str:
-        if vn.space.name == 'const':
-            return '%#x' % vn.offset
-        elif vn.space.name == 'register':
+        if vn.space.name == "const":
+            return "%#x" % vn.offset
+        elif vn.space.name == "register":
             name = vn.get_register_name()
             if name:
                 return name
@@ -454,16 +469,14 @@ class OpFormatUnary(OpFormat):
     General unary op pretty-printer.
     """
 
-    __slots__ = (
-        'operator',
-    )
+    __slots__ = ("operator",)
 
     def __init__(self, operator: str):
         super().__init__()
         self.operator = operator
 
     def fmt(self, op: PcodeOp) -> str:
-        return f'{self.operator}{self.fmt_vn(op.inputs[0])}'
+        return f"{self.operator}{self.fmt_vn(op.inputs[0])}"
 
 
 class OpFormatBinary(OpFormat):
@@ -471,16 +484,14 @@ class OpFormatBinary(OpFormat):
     General binary op pretty-printer.
     """
 
-    __slots__ = (
-        'operator',
-    )
+    __slots__ = ("operator",)
 
     def __init__(self, operator: str):
         super().__init__()
         self.operator = operator
 
     def fmt(self, op: PcodeOp) -> str:
-        return f'{self.fmt_vn(op.inputs[0])} {self.operator} {self.fmt_vn(op.inputs[1])}'
+        return f"{self.fmt_vn(op.inputs[0])} {self.operator} {self.fmt_vn(op.inputs[1])}"
 
 
 class OpFormatFunc(OpFormat):
@@ -488,9 +499,7 @@ class OpFormatFunc(OpFormat):
     Function-call style op pretty-printer.
     """
 
-    __slots__ = (
-        'operator',
-    )
+    __slots__ = ("operator",)
 
     def __init__(self, operator: str):
         super().__init__()
@@ -506,28 +515,28 @@ class OpFormatSpecial(OpFormat):
     """
 
     def fmt_BRANCH(self, op: PcodeOp) -> str:
-        return f'goto {self.fmt_vn(op.inputs[0])}'
+        return f"goto {self.fmt_vn(op.inputs[0])}"
 
     def fmt_BRANCHIND(self, op: PcodeOp) -> str:
-        return f'goto [{self.fmt_vn(op.inputs[0])}]'
+        return f"goto [{self.fmt_vn(op.inputs[0])}]"
 
     def fmt_CALL(self, op: PcodeOp) -> str:
-        return f'call {self.fmt_vn(op.inputs[0])}'
+        return f"call {self.fmt_vn(op.inputs[0])}"
 
     def fmt_CALLIND(self, op: PcodeOp) -> str:
-        return f'call [{self.fmt_vn(op.inputs[0])}]'
+        return f"call [{self.fmt_vn(op.inputs[0])}]"
 
     def fmt_CBRANCH(self, op: PcodeOp) -> str:
-        return f'if ({self.fmt_vn(op.inputs[1])}) goto {self.fmt_vn(op.inputs[0])}'
+        return f"if ({self.fmt_vn(op.inputs[1])}) goto {self.fmt_vn(op.inputs[0])}"
 
     def fmt_LOAD(self, op: PcodeOp) -> str:
-        return f'*[{op.inputs[0].get_space_from_const().name}]{self.fmt_vn(op.inputs[1])}'
+        return f"*[{op.inputs[0].get_space_from_const().name}]{self.fmt_vn(op.inputs[1])}"
 
     def fmt_RETURN(self, op: PcodeOp) -> str:
-        return f'return {self.fmt_vn(op.inputs[0])}'
+        return f"return {self.fmt_vn(op.inputs[0])}"
 
     def fmt_STORE(self, op: PcodeOp) -> str:
-        return f'*[{op.inputs[0].get_space_from_const().name}]{self.fmt_vn(op.inputs[1])} = {op.inputs[2]}'
+        return f"*[{op.inputs[0].get_space_from_const().name}]{self.fmt_vn(op.inputs[1])} = {op.inputs[2]}"
 
     def fmt(self, op: PcodeOp) -> str:
         return {
@@ -550,64 +559,64 @@ class PcodePrettyPrinter:
     DEFAULT_OP_FORMAT = OpFormat()
 
     OP_FORMATS = {
-        OpCode.BOOL_AND: OpFormatBinary('&&'),
-        OpCode.BOOL_NEGATE: OpFormatUnary('!'),
-        OpCode.BOOL_OR: OpFormatBinary('||'),
-        OpCode.BOOL_XOR: OpFormatBinary('^^'),
+        OpCode.BOOL_AND: OpFormatBinary("&&"),
+        OpCode.BOOL_NEGATE: OpFormatUnary("!"),
+        OpCode.BOOL_OR: OpFormatBinary("||"),
+        OpCode.BOOL_XOR: OpFormatBinary("^^"),
         OpCode.BRANCH: OpFormatSpecial(),
         OpCode.BRANCHIND: OpFormatSpecial(),
         OpCode.CALL: OpFormatSpecial(),
         OpCode.CALLIND: OpFormatSpecial(),
         OpCode.CBRANCH: OpFormatSpecial(),
-        OpCode.COPY: OpFormatUnary(''),
-        OpCode.CPOOLREF: OpFormatFunc('cpool'),
-        OpCode.FLOAT_ABS: OpFormatFunc('abs'),
-        OpCode.FLOAT_ADD: OpFormatBinary('f+'),
-        OpCode.FLOAT_CEIL: OpFormatFunc('ceil'),
-        OpCode.FLOAT_DIV: OpFormatBinary('f/'),
-        OpCode.FLOAT_EQUAL: OpFormatBinary('f=='),
-        OpCode.FLOAT_FLOAT2FLOAT: OpFormatFunc('float2float'),
-        OpCode.FLOAT_FLOOR: OpFormatFunc('floor'),
-        OpCode.FLOAT_INT2FLOAT: OpFormatFunc('int2float'),
-        OpCode.FLOAT_LESS: OpFormatBinary('f<'),
-        OpCode.FLOAT_LESSEQUAL: OpFormatBinary('f<='),
-        OpCode.FLOAT_MULT: OpFormatBinary('f*'),
-        OpCode.FLOAT_NAN: OpFormatFunc('nan'),
-        OpCode.FLOAT_NEG: OpFormatUnary('f- '),
-        OpCode.FLOAT_NOTEQUAL: OpFormatBinary('f!='),
-        OpCode.FLOAT_ROUND: OpFormatFunc('round'),
-        OpCode.FLOAT_SQRT: OpFormatFunc('sqrt'),
-        OpCode.FLOAT_SUB: OpFormatBinary('f-'),
-        OpCode.FLOAT_TRUNC: OpFormatFunc('trunc'),
-        OpCode.INT_2COMP: OpFormatUnary('-'),
-        OpCode.INT_ADD: OpFormatBinary('+'),
-        OpCode.INT_AND: OpFormatBinary('&'),
-        OpCode.INT_CARRY: OpFormatFunc('carry'),
-        OpCode.INT_DIV: OpFormatBinary('/'),
-        OpCode.INT_EQUAL: OpFormatBinary('=='),
-        OpCode.INT_LEFT: OpFormatBinary('<<'),
-        OpCode.INT_LESS: OpFormatBinary('<'),
-        OpCode.INT_LESSEQUAL: OpFormatBinary('<='),
-        OpCode.INT_MULT: OpFormatBinary('*'),
-        OpCode.INT_NEGATE: OpFormatUnary('~'),
-        OpCode.INT_NOTEQUAL: OpFormatBinary('!='),
-        OpCode.INT_OR: OpFormatBinary('|'),
-        OpCode.INT_REM: OpFormatBinary('%'),
-        OpCode.INT_RIGHT: OpFormatBinary('>>'),
-        OpCode.INT_SBORROW: OpFormatFunc('sborrow'),
-        OpCode.INT_SCARRY: OpFormatFunc('scarry'),
-        OpCode.INT_SDIV: OpFormatBinary('s/'),
-        OpCode.INT_SEXT: OpFormatFunc('sext'),
-        OpCode.INT_SLESS: OpFormatBinary('s<'),
-        OpCode.INT_SLESSEQUAL: OpFormatBinary('s<='),
-        OpCode.INT_SREM: OpFormatBinary('s%'),
-        OpCode.INT_SRIGHT: OpFormatBinary('s>>'),
-        OpCode.INT_SUB: OpFormatBinary('-'),
-        OpCode.INT_XOR: OpFormatBinary('^'),
-        OpCode.INT_ZEXT: OpFormatFunc('zext'),
+        OpCode.COPY: OpFormatUnary(""),
+        OpCode.CPOOLREF: OpFormatFunc("cpool"),
+        OpCode.FLOAT_ABS: OpFormatFunc("abs"),
+        OpCode.FLOAT_ADD: OpFormatBinary("f+"),
+        OpCode.FLOAT_CEIL: OpFormatFunc("ceil"),
+        OpCode.FLOAT_DIV: OpFormatBinary("f/"),
+        OpCode.FLOAT_EQUAL: OpFormatBinary("f=="),
+        OpCode.FLOAT_FLOAT2FLOAT: OpFormatFunc("float2float"),
+        OpCode.FLOAT_FLOOR: OpFormatFunc("floor"),
+        OpCode.FLOAT_INT2FLOAT: OpFormatFunc("int2float"),
+        OpCode.FLOAT_LESS: OpFormatBinary("f<"),
+        OpCode.FLOAT_LESSEQUAL: OpFormatBinary("f<="),
+        OpCode.FLOAT_MULT: OpFormatBinary("f*"),
+        OpCode.FLOAT_NAN: OpFormatFunc("nan"),
+        OpCode.FLOAT_NEG: OpFormatUnary("f- "),
+        OpCode.FLOAT_NOTEQUAL: OpFormatBinary("f!="),
+        OpCode.FLOAT_ROUND: OpFormatFunc("round"),
+        OpCode.FLOAT_SQRT: OpFormatFunc("sqrt"),
+        OpCode.FLOAT_SUB: OpFormatBinary("f-"),
+        OpCode.FLOAT_TRUNC: OpFormatFunc("trunc"),
+        OpCode.INT_2COMP: OpFormatUnary("-"),
+        OpCode.INT_ADD: OpFormatBinary("+"),
+        OpCode.INT_AND: OpFormatBinary("&"),
+        OpCode.INT_CARRY: OpFormatFunc("carry"),
+        OpCode.INT_DIV: OpFormatBinary("/"),
+        OpCode.INT_EQUAL: OpFormatBinary("=="),
+        OpCode.INT_LEFT: OpFormatBinary("<<"),
+        OpCode.INT_LESS: OpFormatBinary("<"),
+        OpCode.INT_LESSEQUAL: OpFormatBinary("<="),
+        OpCode.INT_MULT: OpFormatBinary("*"),
+        OpCode.INT_NEGATE: OpFormatUnary("~"),
+        OpCode.INT_NOTEQUAL: OpFormatBinary("!="),
+        OpCode.INT_OR: OpFormatBinary("|"),
+        OpCode.INT_REM: OpFormatBinary("%"),
+        OpCode.INT_RIGHT: OpFormatBinary(">>"),
+        OpCode.INT_SBORROW: OpFormatFunc("sborrow"),
+        OpCode.INT_SCARRY: OpFormatFunc("scarry"),
+        OpCode.INT_SDIV: OpFormatBinary("s/"),
+        OpCode.INT_SEXT: OpFormatFunc("sext"),
+        OpCode.INT_SLESS: OpFormatBinary("s<"),
+        OpCode.INT_SLESSEQUAL: OpFormatBinary("s<="),
+        OpCode.INT_SREM: OpFormatBinary("s%"),
+        OpCode.INT_SRIGHT: OpFormatBinary("s>>"),
+        OpCode.INT_SUB: OpFormatBinary("-"),
+        OpCode.INT_XOR: OpFormatBinary("^"),
+        OpCode.INT_ZEXT: OpFormatFunc("zext"),
         OpCode.LOAD: OpFormatSpecial(),
-        OpCode.NEW: OpFormatFunc('newobject'),
-        OpCode.POPCOUNT: OpFormatFunc('popcount'),
+        OpCode.NEW: OpFormatFunc("newobject"),
+        OpCode.POPCOUNT: OpFormatFunc("popcount"),
         OpCode.RETURN: OpFormatSpecial(),
         OpCode.STORE: OpFormatSpecial(),
     }
@@ -615,7 +624,7 @@ class PcodePrettyPrinter:
     @classmethod
     def fmt_op(cls, op: PcodeOp) -> str:
         fmt = cls.OP_FORMATS.get(op.opcode, cls.DEFAULT_OP_FORMAT)
-        return (f'{fmt.fmt_vn(op.output)} = ' if op.output else '') + fmt.fmt(op)
+        return (f"{fmt.fmt_vn(op.output)} = " if op.output else "") + fmt.fmt(op)
 
 
 class Translation(ContextObj):
@@ -624,11 +633,11 @@ class Translation(ContextObj):
     """
 
     __slots__ = (
-        'address',
-        'length',
-        'asm_mnem',
-        'asm_body',
-        'ops',
+        "address",
+        "length",
+        "asm_mnem",
+        "asm_body",
+        "ops",
     )
 
     address: Address
@@ -637,8 +646,15 @@ class Translation(ContextObj):
     asm_body: str
     ops: Sequence[PcodeOp]
 
-    def __init__(self, ctx: Context, address: Address, length: int, asm_mnem: str, asm_body: str,
-                 ops: Sequence[PcodeOp]):
+    def __init__(
+        self,
+        ctx: Context,
+        address: Address,
+        length: int,
+        asm_mnem: str,
+        asm_body: str,
+        ops: Sequence[PcodeOp],
+    ):
         super().__init__(ctx)
         self.address = address
         self.length = length
@@ -647,12 +663,15 @@ class Translation(ContextObj):
         self.ops = ops
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_Translation') -> 'Translation':
-        return cls(ctx, Address.from_c(ctx, cobj.address),
-                   cobj.length,
-                   ffi.string(cobj.asm_mnem).decode('utf-8'),
-                   ffi.string(cobj.asm_body).decode('utf-8'),
-                   [PcodeOp.from_c(ctx, cobj.ops[i]) for i in range(cobj.ops_count)])
+    def from_c(cls, ctx: Context, cobj: "csleigh_Translation") -> "Translation":
+        return cls(
+            ctx,
+            Address.from_c(ctx, cobj.address),
+            cobj.length,
+            ffi.string(cobj.asm_mnem).decode("utf-8"),
+            ffi.string(cobj.asm_body).decode("utf-8"),
+            [PcodeOp.from_c(ctx, cobj.ops[i]) for i in range(cobj.ops_count)],
+        )
 
 
 class SleighError(Exception):
@@ -660,9 +679,7 @@ class SleighError(Exception):
     Base class for translation errors.
     """
 
-    __slots__ = (
-        'ctx',
-    )
+    __slots__ = ("ctx",)
 
     ctx: Context
 
@@ -677,9 +694,9 @@ class UnimplError(SleighError):
     """
 
     __slots__ = (
-        'explain',
-        'address',
-        'instruction_length',
+        "explain",
+        "address",
+        "instruction_length",
     )
 
     explain: str
@@ -693,13 +710,13 @@ class UnimplError(SleighError):
         self.instruction_length = instruction_length
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_Error') -> 'UnimplError':
+    def from_c(cls, ctx: Context, cobj: "csleigh_Error") -> "UnimplError":
         assert SleighErrorType(cobj.type) == SleighErrorType.UNIMPL
         return cls(
             ctx,
-            ffi.string(cobj.explain).decode('utf-8'),
+            ffi.string(cobj.explain).decode("utf-8"),
             Address.from_c(ctx, cobj.unimpl.address),
-            cobj.unimpl.instruction_length
+            cobj.unimpl.instruction_length,
         )
 
 
@@ -709,8 +726,8 @@ class BadDataError(SleighError):
     """
 
     __slots__ = (
-        'explain',
-        'address',
+        "explain",
+        "address",
     )
 
     explain: str
@@ -722,12 +739,12 @@ class BadDataError(SleighError):
         self.address = address
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_Error') -> 'BadDataError':
+    def from_c(cls, ctx: Context, cobj: "csleigh_Error") -> "BadDataError":
         assert SleighErrorType(cobj.type) == SleighErrorType.BADDATA
         return cls(
             ctx,
-            ffi.string(cobj.explain).decode('utf-8'),
-            Address.from_c(ctx, cobj.unimpl.address)
+            ffi.string(cobj.explain).decode("utf-8"),
+            Address.from_c(ctx, cobj.unimpl.address),
         )
 
 
@@ -737,15 +754,14 @@ class SleighErrorFactory:
     """
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_Error') -> Union[None, UnimplError, BadDataError]:
+    def from_c(cls, ctx: Context, cobj: "csleigh_Error") -> Union[None, UnimplError, BadDataError]:
         t = SleighErrorType(cobj.type)
         if t == SleighErrorType.NOERROR:
             return None
         else:
-            return {
-                SleighErrorType.UNIMPL: UnimplError,
-                SleighErrorType.BADDATA: BadDataError,
-            }[t].from_c(ctx, cobj)
+            return {SleighErrorType.UNIMPL: UnimplError, SleighErrorType.BADDATA: BadDataError,}[
+                t
+            ].from_c(ctx, cobj)
 
 
 class TranslationResult(ContextObj):
@@ -754,21 +770,27 @@ class TranslationResult(ContextObj):
     """
 
     __slots__ = (
-        'instructions',
-        'error',
+        "instructions",
+        "error",
     )
 
     instructions: Sequence[Translation]
     error: SleighError
 
-    def __init__(self, ctx: Context, instructions: Sequence[Translation], error: Optional[SleighError] = None):
+    def __init__(
+        self,
+        ctx: Context,
+        instructions: Sequence[Translation],
+        error: Optional[SleighError] = None,
+    ):
         super().__init__(ctx)
         self.instructions = instructions
         self.error = error
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: 'csleigh_TranslationResult') -> 'TranslationResult':
-        return cls(ctx,
-                   [Translation.from_c(ctx, cobj.instructions[i]) for i in range(cobj.instructions_count)],
-                   SleighErrorFactory.from_c(ctx, cobj.error)
-                   )
+    def from_c(cls, ctx: Context, cobj: "csleigh_TranslationResult") -> "TranslationResult":
+        return cls(
+            ctx,
+            [Translation.from_c(ctx, cobj.instructions[i]) for i in range(cobj.instructions_count)],
+            SleighErrorFactory.from_c(ctx, cobj.error),
+        )
