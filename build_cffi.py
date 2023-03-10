@@ -15,7 +15,7 @@ SLEIGH_BUILD_DIR = os.path.join(LIB_SRC_DIR, "build")
 class FfiPreBuildExtension(build_ext):
     def pre_run(self, ext, ffi):
         try:
-            out = subprocess.check_output(["cmake", "--version"])
+            subprocess.check_output(["cmake", "--version"])
         except OSError:
             raise RuntimeError("Please install CMake to build")
 
