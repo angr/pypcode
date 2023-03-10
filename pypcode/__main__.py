@@ -56,7 +56,7 @@ def main():
     )
 
     # List supported languages
-    langs = {l.id: l for arch in Arch.enumerate() for l in arch.languages}
+    langs = {lang.id: lang for arch in Arch.enumerate() for lang in arch.languages}
     if ("-l" in sys.argv) or ("--list" in sys.argv):
         for langid in sorted(langs):
             print("%-35s - %s" % (langid, langs[langid].description))
@@ -68,7 +68,7 @@ def main():
     if args.langid not in langs:
         print(f'Language "{args.langid}" not found.')
         t = args.langid.upper()
-        suggestions = [l for l in langs if SequenceMatcher(None, t, l.split()[0].upper()).ratio() > 0.25]
+        suggestions = [langid for langid in langs if SequenceMatcher(None, t, langid.split()[0].upper()).ratio() > 0.25]
         if len(suggestions):
             print("\nSuggestions:")
             for langid in sorted(suggestions):
