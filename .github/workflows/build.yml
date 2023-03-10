@@ -114,27 +114,13 @@ jobs:
         with:
           python-version: '3.11'
       - run: |
-          pip install pdoc
-          pip install -e .
-      - run: pdoc -o docs pypcode
-      - uses: actions/upload-pages-artifact@v1
-        with:
-          path: docs/
-
-  deploy_docs:
-    name: Deploy docs to GitHub pages
-    needs: [build_docs, build_wheels, test_wheels]
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v1
+          pip install -e .[docs]
+          cd docs && make html coverage
+          if [ -s _build/coverage/python.txt ]; then
+            echo "Doc coverage is missing for:"
+            cat _build/coverage/python.txt
+            exit 1
+          fi
 
   upload_pypi:
     name: Upload wheels to PyPI
