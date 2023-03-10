@@ -8,37 +8,198 @@ Pythonic interface to SLEIGH by way of the csleigh C API wrapper and CFFI.
 import os.path
 import xml.etree.ElementTree as ET
 from enum import Enum
-from typing import Generator, Sequence, Optional, Mapping, Union, Tuple
+from typing import TYPE_CHECKING, Generator, Sequence, Optional, Mapping, Union, Tuple
 
 from ._csleigh import ffi
-from ._csleigh.lib import *
+from ._csleigh.lib import (
+    csleigh_Addr_getSpaceFromConst,
+    csleigh_Addr_isConstant,
+    csleigh_AddrSpace_getName,
+    csleigh_CPUI_BOOL_AND,
+    csleigh_CPUI_BOOL_NEGATE,
+    csleigh_CPUI_BOOL_OR,
+    csleigh_CPUI_BOOL_XOR,
+    csleigh_CPUI_BRANCH,
+    csleigh_CPUI_BRANCHIND,
+    csleigh_CPUI_CALL,
+    csleigh_CPUI_CALLIND,
+    csleigh_CPUI_CALLOTHER,
+    csleigh_CPUI_CAST,
+    csleigh_CPUI_CBRANCH,
+    csleigh_CPUI_COPY,
+    csleigh_CPUI_CPOOLREF,
+    csleigh_CPUI_EXTRACT,
+    csleigh_CPUI_FLOAT_ABS,
+    csleigh_CPUI_FLOAT_ADD,
+    csleigh_CPUI_FLOAT_CEIL,
+    csleigh_CPUI_FLOAT_DIV,
+    csleigh_CPUI_FLOAT_EQUAL,
+    csleigh_CPUI_FLOAT_FLOAT2FLOAT,
+    csleigh_CPUI_FLOAT_FLOOR,
+    csleigh_CPUI_FLOAT_INT2FLOAT,
+    csleigh_CPUI_FLOAT_LESS,
+    csleigh_CPUI_FLOAT_LESSEQUAL,
+    csleigh_CPUI_FLOAT_MULT,
+    csleigh_CPUI_FLOAT_NAN,
+    csleigh_CPUI_FLOAT_NEG,
+    csleigh_CPUI_FLOAT_NOTEQUAL,
+    csleigh_CPUI_FLOAT_ROUND,
+    csleigh_CPUI_FLOAT_SQRT,
+    csleigh_CPUI_FLOAT_SUB,
+    csleigh_CPUI_FLOAT_TRUNC,
+    csleigh_CPUI_INDIRECT,
+    csleigh_CPUI_INSERT,
+    csleigh_CPUI_INT_2COMP,
+    csleigh_CPUI_INT_ADD,
+    csleigh_CPUI_INT_AND,
+    csleigh_CPUI_INT_CARRY,
+    csleigh_CPUI_INT_DIV,
+    csleigh_CPUI_INT_EQUAL,
+    csleigh_CPUI_INT_LEFT,
+    csleigh_CPUI_INT_LESS,
+    csleigh_CPUI_INT_LESSEQUAL,
+    csleigh_CPUI_INT_MULT,
+    csleigh_CPUI_INT_NEGATE,
+    csleigh_CPUI_INT_NOTEQUAL,
+    csleigh_CPUI_INT_OR,
+    csleigh_CPUI_INT_REM,
+    csleigh_CPUI_INT_RIGHT,
+    csleigh_CPUI_INT_SBORROW,
+    csleigh_CPUI_INT_SCARRY,
+    csleigh_CPUI_INT_SDIV,
+    csleigh_CPUI_INT_SEXT,
+    csleigh_CPUI_INT_SLESS,
+    csleigh_CPUI_INT_SLESSEQUAL,
+    csleigh_CPUI_INT_SREM,
+    csleigh_CPUI_INT_SRIGHT,
+    csleigh_CPUI_INT_SUB,
+    csleigh_CPUI_INT_XOR,
+    csleigh_CPUI_INT_ZEXT,
+    csleigh_CPUI_LOAD,
+    csleigh_CPUI_MULTIEQUAL,
+    csleigh_CPUI_NEW,
+    csleigh_CPUI_PIECE,
+    csleigh_CPUI_POPCOUNT,
+    csleigh_CPUI_PTRADD,
+    csleigh_CPUI_PTRSUB,
+    csleigh_CPUI_RETURN,
+    csleigh_CPUI_SEGMENTOP,
+    csleigh_CPUI_STORE,
+    csleigh_CPUI_SUBPIECE,
+    csleigh_createContext,
+    csleigh_destroyContext,
+    csleigh_ERROR_TYPE_BADDATA,
+    csleigh_ERROR_TYPE_GENERIC,
+    csleigh_ERROR_TYPE_NOERROR,
+    csleigh_ERROR_TYPE_UNIMPL,
+    csleigh_freeResult,
+    csleigh_setVariableDefault,
+    csleigh_Sleigh_getAllRegisters,
+    csleigh_Sleigh_getRegisterName,
+    csleigh_translate,
+)
+
+if TYPE_CHECKING:
+    csleigh_Address = ffi.CData
+    csleigh_AddrSpace = ffi.CData
+    csleigh_Context = ffi.CData
+    csleigh_Error = ffi.CData
+    csleigh_PcodeOp = ffi.CData
+    csleigh_SeqNum = ffi.CData
+    csleigh_Translation = ffi.CData
+    csleigh_TranslationResult = ffi.CData
+    csleigh_Varnode = ffi.CData
+
 
 PKG_SRC_DIR = os.path.abspath(os.path.dirname(__file__))
 SPECFILES_DIR = os.path.join(PKG_SRC_DIR, "processors")
 
 
-def _gen_enum(pyname: str, cprefix: str):
+class OpCode(Enum):
     """
-    Wrangle prefixed C enum names into a Python enum type, e.g.:
-
-    enum csleigh_OpCode {           --> class OpCode(Enum):
-        ...                         -->   ...
-        csleigh_CPUI_BOOL_AND = 39, -->   BOOL_AND =39
-        ...                         -->   ...
-    };                              -->
-
-    Provide destination type name in `pyname` and `cprefix` (e.g. csleigh_CPUI_).
+    1:1 mapping of C enumeration csleigh_CPUI_* to Enum
     """
-    e = Enum(
-        pyname,
-        {n[len(cprefix) :]: v for n, v in globals().items() if n.startswith(cprefix)},
-    )
-    e.__doc__ = f"1:1 mapping of C enumeration `{cprefix}*` to `{pyname}*`"
-    return e
+    BOOL_AND = csleigh_CPUI_BOOL_AND
+    BOOL_NEGATE = csleigh_CPUI_BOOL_NEGATE
+    BOOL_OR = csleigh_CPUI_BOOL_OR
+    BOOL_XOR = csleigh_CPUI_BOOL_XOR
+    BRANCH = csleigh_CPUI_BRANCH
+    BRANCHIND = csleigh_CPUI_BRANCHIND
+    CALL = csleigh_CPUI_CALL
+    CALLIND = csleigh_CPUI_CALLIND
+    CALLOTHER = csleigh_CPUI_CALLOTHER
+    CAST = csleigh_CPUI_CAST
+    CBRANCH = csleigh_CPUI_CBRANCH
+    COPY = csleigh_CPUI_COPY
+    CPOOLREF = csleigh_CPUI_CPOOLREF
+    EXTRACT = csleigh_CPUI_EXTRACT
+    FLOAT_ABS = csleigh_CPUI_FLOAT_ABS
+    FLOAT_ADD = csleigh_CPUI_FLOAT_ADD
+    FLOAT_CEIL = csleigh_CPUI_FLOAT_CEIL
+    FLOAT_DIV = csleigh_CPUI_FLOAT_DIV
+    FLOAT_EQUAL = csleigh_CPUI_FLOAT_EQUAL
+    FLOAT_FLOAT2FLOAT = csleigh_CPUI_FLOAT_FLOAT2FLOAT
+    FLOAT_FLOOR = csleigh_CPUI_FLOAT_FLOOR
+    FLOAT_INT2FLOAT = csleigh_CPUI_FLOAT_INT2FLOAT
+    FLOAT_LESS = csleigh_CPUI_FLOAT_LESS
+    FLOAT_LESSEQUAL = csleigh_CPUI_FLOAT_LESSEQUAL
+    FLOAT_MULT = csleigh_CPUI_FLOAT_MULT
+    FLOAT_NAN = csleigh_CPUI_FLOAT_NAN
+    FLOAT_NEG = csleigh_CPUI_FLOAT_NEG
+    FLOAT_NOTEQUAL = csleigh_CPUI_FLOAT_NOTEQUAL
+    FLOAT_ROUND = csleigh_CPUI_FLOAT_ROUND
+    FLOAT_SQRT = csleigh_CPUI_FLOAT_SQRT
+    FLOAT_SUB = csleigh_CPUI_FLOAT_SUB
+    FLOAT_TRUNC = csleigh_CPUI_FLOAT_TRUNC
+    INDIRECT = csleigh_CPUI_INDIRECT
+    INSERT = csleigh_CPUI_INSERT
+    INT_2COMP = csleigh_CPUI_INT_2COMP
+    INT_ADD = csleigh_CPUI_INT_ADD
+    INT_AND = csleigh_CPUI_INT_AND
+    INT_CARRY = csleigh_CPUI_INT_CARRY
+    INT_DIV = csleigh_CPUI_INT_DIV
+    INT_EQUAL = csleigh_CPUI_INT_EQUAL
+    INT_LEFT = csleigh_CPUI_INT_LEFT
+    INT_LESS = csleigh_CPUI_INT_LESS
+    INT_LESSEQUAL = csleigh_CPUI_INT_LESSEQUAL
+    INT_MULT = csleigh_CPUI_INT_MULT
+    INT_NEGATE = csleigh_CPUI_INT_NEGATE
+    INT_NOTEQUAL = csleigh_CPUI_INT_NOTEQUAL
+    INT_OR = csleigh_CPUI_INT_OR
+    INT_REM = csleigh_CPUI_INT_REM
+    INT_RIGHT = csleigh_CPUI_INT_RIGHT
+    INT_SBORROW = csleigh_CPUI_INT_SBORROW
+    INT_SCARRY = csleigh_CPUI_INT_SCARRY
+    INT_SDIV = csleigh_CPUI_INT_SDIV
+    INT_SEXT = csleigh_CPUI_INT_SEXT
+    INT_SLESS = csleigh_CPUI_INT_SLESS
+    INT_SLESSEQUAL = csleigh_CPUI_INT_SLESSEQUAL
+    INT_SREM = csleigh_CPUI_INT_SREM
+    INT_SRIGHT = csleigh_CPUI_INT_SRIGHT
+    INT_SUB = csleigh_CPUI_INT_SUB
+    INT_XOR = csleigh_CPUI_INT_XOR
+    INT_ZEXT = csleigh_CPUI_INT_ZEXT
+    LOAD = csleigh_CPUI_LOAD
+    MULTIEQUAL = csleigh_CPUI_MULTIEQUAL
+    NEW = csleigh_CPUI_NEW
+    PIECE = csleigh_CPUI_PIECE
+    POPCOUNT = csleigh_CPUI_POPCOUNT
+    PTRADD = csleigh_CPUI_PTRADD
+    PTRSUB = csleigh_CPUI_PTRSUB
+    RETURN = csleigh_CPUI_RETURN
+    SEGMENTOP = csleigh_CPUI_SEGMENTOP
+    STORE = csleigh_CPUI_STORE
+    SUBPIECE = csleigh_CPUI_SUBPIECE
 
 
-OpCode = _gen_enum("OpCode", "csleigh_CPUI_")
-SleighErrorType = _gen_enum("SleighErrorType", "csleigh_ERROR_TYPE_")
+class SleighErrorType(Enum):
+    """
+    1:1 mapping of C enumeration csleigh_ERROR_TYPE_* to Enum
+    """
+    BADDATA = csleigh_ERROR_TYPE_BADDATA
+    GENERIC = csleigh_ERROR_TYPE_GENERIC
+    NOERROR = csleigh_ERROR_TYPE_NOERROR
+    UNIMPL = csleigh_ERROR_TYPE_UNIMPL
 
 
 class ArchLanguage:
