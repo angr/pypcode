@@ -49,9 +49,11 @@ setup(
     author_email="contact@mborgerson.com",
     url="https://github.com/angr/pypcode",
     packages=["pypcode"],
-    package_data={"pypcode": add_pkg_data_dirs("pypcode", ["processors", "docs"])},
+    package_data={
+        "pypcode": add_pkg_data_dirs("pypcode", ["processors", "docs", "_csleigh"]) + ["py.typed", "_csleigh.pyi"]
+    },
     setup_requires=["cffi"],
-    install_requires=["cffi"],
+    install_requires=["cffi", "types-cffi"],
     cffi_modules=["build_cffi.py:ffibuilder"],
     cmdclass=cmdclass,
     python_requires=">=3.8",

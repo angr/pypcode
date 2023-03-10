@@ -8,7 +8,7 @@ Pythonic interface to SLEIGH by way of the csleigh C API wrapper and CFFI.
 import os.path
 import xml.etree.ElementTree as ET
 from enum import Enum
-from typing import TYPE_CHECKING, Generator, Sequence, Optional, Mapping, Union, Tuple
+from typing import TYPE_CHECKING, cast, Dict, Generator, Sequence, Optional, Mapping, Union, Tuple
 
 from ._csleigh import ffi
 from ._csleigh.lib import (
@@ -100,15 +100,17 @@ from ._csleigh.lib import (
 )
 
 if TYPE_CHECKING:
-    csleigh_Address = ffi.CData
-    csleigh_AddrSpace = ffi.CData
-    csleigh_Context = ffi.CData
-    csleigh_Error = ffi.CData
-    csleigh_PcodeOp = ffi.CData
-    csleigh_SeqNum = ffi.CData
-    csleigh_Translation = ffi.CData
-    csleigh_TranslationResult = ffi.CData
-    csleigh_Varnode = ffi.CData
+    from ._csleigh.lib import (
+        csleigh_Address,
+        csleigh_AddrSpace,
+        csleigh_Context,
+        csleigh_Error,
+        csleigh_PcodeOp,
+        csleigh_SeqNum,
+        csleigh_Translation,
+        csleigh_TranslationResult,
+        csleigh_Varnode,
+    )
 
 
 PKG_SRC_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -218,13 +220,12 @@ class ArchLanguage:
 
     archdir: str
     ldef: ET.Element
-    pspec: Optional[ET.Element]
 
     def __init__(self, archdir: str, ldef: ET.Element):
         self.archdir = archdir
         self.ldef = ldef
-        self._pspec = None
-        self._cspecs = None
+        self._pspec: Optional[ET.Element] = None
+        self._cspecs: Optional[Dict[Tuple[str, str], ET.Element]] = None
 
     @property
     def pspec_path(self) -> str:
@@ -236,7 +237,10 @@ class ArchLanguage:
 
     @property
     def description(self) -> str:
-        return self.ldef.find("description").text
+        elem = self.ldef.find("description")
+        if elem is not None:
+            return elem.text or ""
+        return ""
 
     def __getattr__(self, key):
         if key in self.ldef.attrib:
@@ -244,7 +248,7 @@ class ArchLanguage:
         raise AttributeError(key)
 
     @property
-    def pspec(self) -> ET.Element:
+    def pspec(self) -> Optional[ET.Element]:
         if self._pspec is None:
             self._pspec = ET.parse(self.pspec_path).getroot()
         return self._pspec
@@ -260,6 +264,8 @@ class ArchLanguage:
         return self._cspecs
 
     def init_context_from_pspec(self, ctx: "csleigh_Context") -> None:
+        if self.pspec is None:
+            return
         cd = self.pspec.find("context_data")
         if cd is None:
             return
@@ -330,7 +336,7 @@ class Context:
 
     lang: ArchLanguage
     ctx_c: "csleigh_Context"
-    _cached_addr_spaces: Mapping["csleigh_AddrSpace", "AddrSpace"]
+    _cached_addr_spaces: Dict["csleigh_AddrSpace", "AddrSpace"]
 
     def __init__(self, lang: ArchLanguage):
         self._cached_addr_spaces = {}
@@ -343,14 +349,14 @@ class Context:
 
         self.registers = {}
         for i in range(count_a[0]):
-            reg_name = ffi.string(regs[i].name).decode("utf-8")
+            reg_name = cast(bytes, ffi.string(regs[i].name)).decode("utf-8")
             reg_vn = Varnode.from_c(self, regs[i].varnode)
             self.registers[reg_name] = reg_vn
 
     def __del__(self):
         csleigh_destroyContext(self.ctx_c)
 
-    def get_cached_addr_space(self, cobj: "csleigh_AddrSpace") -> "AddrSpace":
+    def get_cached_addr_space(self, cobj: "csleigh_AddrSpace") -> Optional["AddrSpace"]:
         """
         Used during translation to cache unchanging address space objects. Should
         not be called by pypcode users.
@@ -392,7 +398,9 @@ class Context:
         """
         Call SleighBase::getRegisterName in this context.
         """
-        return ffi.string(csleigh_Sleigh_getRegisterName(self.ctx_c, space.to_c(), offset, size)).decode("utf-8")
+        return cast(bytes, ffi.string(csleigh_Sleigh_getRegisterName(self.ctx_c, space.to_c(), offset, size))).decode(
+            "utf-8"
+        )
 
 
 class ContextObj:
@@ -424,7 +432,7 @@ class AddrSpace(ContextObj):
     def __init__(self, ctx: Context, cobj: "csleigh_AddrSpace"):
         super().__init__(ctx)
         self.cobj = cobj
-        self.name = ffi.string(csleigh_AddrSpace_getName(cobj)).decode("utf-8")
+        self.name = cast(bytes, ffi.string(csleigh_AddrSpace_getName(cobj))).decode("utf-8")
 
     @classmethod
     def from_c_uncached(cls, ctx: Context, cobj: "csleigh_AddrSpace") -> "AddrSpace":
@@ -467,7 +475,7 @@ class Address(ContextObj):
     def to_c(self) -> "csleigh_Address":
         # XXX: The boxing in AddrSpace/Address is a little excessive, but lets us
         # access the API as provided by SLEIGH, and should still be fast.
-        cobj = ffi.new("csleigh_Address *")
+        cobj = cast("csleigh_Address", ffi.new("csleigh_Address *"))
         cobj.space = self.space.to_c()
         cobj.offset = self.offset
         return cobj
@@ -711,7 +719,7 @@ class OpFormatSpecial(OpFormat):
             OpCode.LOAD: self.fmt_LOAD,
             OpCode.RETURN: self.fmt_RETURN,
             OpCode.STORE: self.fmt_STORE,
-        }.get(op.opcode)(op)
+        }.get(op.opcode, super().fmt)(op)
 
 
 class PcodePrettyPrinter:
@@ -831,8 +839,8 @@ class Translation(ContextObj):
             ctx,
             Address.from_c(ctx, cobj.address),
             cobj.length,
-            ffi.string(cobj.asm_mnem).decode("utf-8"),
-            ffi.string(cobj.asm_body).decode("utf-8"),
+            cast(bytes, ffi.string(cobj.asm_mnem)).decode("utf-8"),
+            cast(bytes, ffi.string(cobj.asm_body)).decode("utf-8"),
             [PcodeOp.from_c(ctx, cobj.ops[i]) for i in range(cobj.ops_count)],
         )
 
@@ -877,7 +885,7 @@ class UnimplError(SleighError):
         assert SleighErrorType(cobj.type) == SleighErrorType.UNIMPL
         return cls(
             ctx,
-            ffi.string(cobj.explain).decode("utf-8"),
+            cast(bytes, ffi.string(cobj.explain)).decode("utf-8"),
             Address.from_c(ctx, cobj.unimpl.address),
             cobj.unimpl.instruction_length,
         )
@@ -906,7 +914,7 @@ class BadDataError(SleighError):
         assert SleighErrorType(cobj.type) == SleighErrorType.BADDATA
         return cls(
             ctx,
-            ffi.string(cobj.explain).decode("utf-8"),
+            cast(bytes, ffi.string(cobj.explain)).decode("utf-8"),
             Address.from_c(ctx, cobj.unimpl.address),
         )
 
@@ -917,17 +925,19 @@ class SleighErrorFactory:
     """
 
     @classmethod
-    def from_c(cls, ctx: Context, cobj: "csleigh_Error") -> Union[None, UnimplError, BadDataError]:
+    def from_c(cls, ctx: Context, cobj: "csleigh_Error") -> Union[None, SleighError, UnimplError, BadDataError]:
         t = SleighErrorType(cobj.type)
         if t == SleighErrorType.NOERROR:
             return None
-        else:
-            return {
-                SleighErrorType.UNIMPL: UnimplError,
-                SleighErrorType.BADDATA: BadDataError,
-            }[
-                t
-            ].from_c(ctx, cobj)
+
+        error_type_to_handler = {
+            SleighErrorType.UNIMPL: UnimplError.from_c,
+            SleighErrorType.BADDATA: BadDataError.from_c,
+        }
+        handler = error_type_to_handler.get(t)
+        if handler is None:
+            return SleighError(ctx, "Unknown error")
+        return handler(ctx, cobj)
 
 
 class TranslationResult(ContextObj):
@@ -941,7 +951,7 @@ class TranslationResult(ContextObj):
     )
 
     instructions: Sequence[Translation]
-    error: SleighError
+    error: Optional[SleighError]
 
     def __init__(
         self,
