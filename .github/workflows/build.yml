@@ -99,7 +99,7 @@ jobs:
           tar --strip-components 1 -xvf ./dist/*.tar.gz
           ls dist
 
-          pip install cffi
+          pip install cffi types-cffi
           pip install --no-index --find-links ./dist pypcode
 
           pushd tests
