@@ -119,6 +119,7 @@ class OpCode(Enum):
     """
     1:1 mapping of C enumeration csleigh_CPUI_* to Enum
     """
+
     BOOL_AND = csleigh_CPUI_BOOL_AND
     BOOL_NEGATE = csleigh_CPUI_BOOL_NEGATE
     BOOL_OR = csleigh_CPUI_BOOL_OR
@@ -196,6 +197,7 @@ class SleighErrorType(Enum):
     """
     1:1 mapping of C enumeration csleigh_ERROR_TYPE_* to Enum
     """
+
     BADDATA = csleigh_ERROR_TYPE_BADDATA
     GENERIC = csleigh_ERROR_TYPE_GENERIC
     NOERROR = csleigh_ERROR_TYPE_NOERROR
@@ -920,7 +922,10 @@ class SleighErrorFactory:
         if t == SleighErrorType.NOERROR:
             return None
         else:
-            return {SleighErrorType.UNIMPL: UnimplError, SleighErrorType.BADDATA: BadDataError,}[
+            return {
+                SleighErrorType.UNIMPL: UnimplError,
+                SleighErrorType.BADDATA: BadDataError,
+            }[
                 t
             ].from_c(ctx, cobj)
 
