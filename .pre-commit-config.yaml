@@ -1,3 +1,4 @@
+exclude: ^pypcode/native|^pypcode/processors
 repos:
 
 #
