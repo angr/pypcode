@@ -41,7 +41,7 @@ except ImportError:
 
 setup(
     name="pypcode",
-    version="1.1.2",
+    version="1.1.3.dev0",
     description="Python bindings to Ghidra's SLEIGH library",
     long_description=long_description,
     long_description_content_type="text/markdown",
