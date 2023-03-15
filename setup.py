@@ -9,10 +9,6 @@ from setuptools import setup
 import build_cffi
 
 
-with open(os.path.join(ROOT_DIR, "README.md")) as f:
-    long_description = f.read()
-
-
 def add_pkg_data_dirs(pkg, dirs):
     pkg_data = []
     for d in dirs:
@@ -40,22 +36,9 @@ except ImportError:
 
 
 setup(
-    name="pypcode",
-    version="1.1.3.dev0",
-    description="Python bindings to Ghidra's SLEIGH library",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author="Matt Borgerson",
-    author_email="contact@mborgerson.com",
-    url="https://github.com/angr/pypcode",
-    packages=["pypcode"],
     package_data={
         "pypcode": add_pkg_data_dirs("pypcode", ["processors", "docs", "_csleigh"]) + ["py.typed", "_csleigh.pyi"]
     },
-    setup_requires=["cffi"],
-    install_requires=["cffi", "types-cffi"],
     cffi_modules=["build_cffi.py:ffibuilder"],
     cmdclass=cmdclass,
-    python_requires=">=3.8",
-    extras_require={"docs": ["sphinx", "sphinx-autodoc-typehints", "myst-parser", "furo"]},
 )
