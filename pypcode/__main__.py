@@ -11,7 +11,7 @@ import logging
 import sys
 from difflib import SequenceMatcher
 
-from pypcode import Arch, Context, PcodePrettyPrinter
+from pypcode import Arch, BadDataError, Context, PcodePrettyPrinter, UnimplError
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format="[%(name)s:%(levelname)s] %(message)s")
@@ -85,7 +85,12 @@ def main():
 
     # Translate
     ctx = Context(langs[args.langid])
-    res = ctx.translate(code, base, args.max_instructions, bb_terminating=args.basic_block)
+
+    try:
+        res = ctx.translate(code, base, args.max_instructions, bb_terminating=args.basic_block)
+    except (BadDataError, UnimplError) as e:
+        print(f"An error occurred during translation: {e}")
+        sys.exit(1)
 
     for insn in res.instructions:
         print("-" * 80)
@@ -94,9 +99,6 @@ def main():
         for op in insn.ops:
             print("%3d: %s" % (op.seq.uniq, str(op) if args.raw else PcodePrettyPrinter.fmt_op(op)))
         print("")
-
-    if res.error:
-        print("** An error occured during translation: " + repr(res.error))
 
 
 if __name__ == "__main__":
