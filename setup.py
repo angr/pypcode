@@ -41,7 +41,8 @@ except ImportError:
 
 setup(
     package_data={
-        "pypcode": add_pkg_data_dirs("pypcode", ["processors", "docs", "_csleigh"]) + ["py.typed", "_csleigh.pyi"]
+        "pypcode": add_pkg_data_dirs("pypcode", ["_csleigh", "bin", "docs", "processors"])
+        + ["py.typed", "_csleigh.pyi"]
     },
     cffi_modules=["build_cffi.py:ffibuilder"],
     cmdclass=cmdclass,
