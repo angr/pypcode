@@ -13,11 +13,15 @@ SLEIGH_BUILD_DIR = os.path.join(LIB_SRC_DIR, "build")
 
 
 class FfiPreBuildExtension(build_ext):
-    def pre_run(self, ext, ffi):
+    """
+    FFI Pre-Build Extension
+    """
+
+    def pre_run(self, _, ffi):
         try:
             subprocess.check_output(["cmake", "--version"])
-        except OSError:
-            raise RuntimeError("Please install CMake to build")
+        except OSError as exc:
+            raise RuntimeError("Please install CMake to build") from exc
 
         cmake_config_args = [
             "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
@@ -42,11 +46,12 @@ class FfiPreBuildExtension(build_ext):
         specfiles_dir = os.path.join(ROOT_DIR if self.inplace else self.build_lib, "pypcode", "processors")
         subprocess.check_call([sleigh_bin, "-a", specfiles_dir])
 
-        ffi.cdef(open(os.path.join(SLEIGH_BUILD_DIR, "csleigh.i")).read())
+        with open(os.path.join(SLEIGH_BUILD_DIR, "csleigh.i"), encoding="utf-8") as f:
+            ffi.cdef(f.read())
 
 
 def ffibuilder():
-    from cffi import FFI
+    from cffi import FFI  # pylint:disable=import-outside-toplevel
 
     ffi = FFI()
     LIBS = {"Darwin": ["c++"], "Linux": ["stdc++"]}.get(platform.system(), [])
