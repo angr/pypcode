@@ -18,48 +18,28 @@ The very latest development version can be installed from GitHub via:
 
 Usage Example
 -------------
-.. code:: python
 
-   from pypcode import Arch, Context, PcodePrettyPrinter
+.. ipython::
 
-   # Enumerate available languages, select target language
-   langs = {lang.id: lang for arch in Arch.enumerate() for lang in arch.languages}
-   lang = langs["x86:LE:64:default"]
-
-   # Load machine code
-   base_address = 0
-   machine_code = b"\x48\x35\x78\x56\x34\x12\xc3"
-
-   # Create a translation context, lift a block
-   ctx = Context(lang)
-   result = ctx.translate(machine_code, base_address, bb_terminating=True)
-   if result.error:
-       print(f"Error: {result.error}")
-       exit(1)
-
-   # Print instruction disassembly, P-Code
-   for insn in result.instructions:
-       print(f"-- {insn.address.offset:#x}: {insn.asm_mnem} {insn.asm_body}")
-       for op in insn.ops:
-           print(f"{op.seq.uniq}) {PcodePrettyPrinter.fmt_op(op)}")
-
-.. highlight:: none
-::
-
-   -- 0x0: XOR RAX,0x12345678
-   0) CF = 0x0
-   1) OF = 0x0
-   2) RAX = RAX ^ 0x12345678
-   3) SF = RAX s< 0x0
-   4) ZF = RAX == 0x0
-   5) unique[0x13180:8] = RAX & 0xff
-   6) unique[0x13200:1] = popcount(unique[0x13180:8])
-   7) unique[0x13280:1] = unique[0x13200:1] & 0x1
-   8) PF = unique[0x13280:1] == 0x0
-   -- 0x6: RET
-   0) RIP = *[ram]RSP
-   1) RSP = RSP + 0x8
-   2) return RIP
+   In [0]: from pypcode import Arch, Context, PcodePrettyPrinter
+      ...:
+      ...: # Enumerate available languages, select target language
+      ...: langs = {lang.id: lang for arch in Arch.enumerate() for lang in arch.languages}
+      ...: lang = langs["x86:LE:64:default"]
+      ...:
+      ...: # Load machine code
+      ...: machine_code = b"\x48\x35\x78\x56\x34\x12\xc3"
+      ...: base_address = 0
+      ...:
+      ...: # Create a translation context, lift a block
+      ...: ctx = Context(lang)
+      ...: result = ctx.translate(machine_code, base_address, bb_terminating=True)
+      ...:
+      ...: # Print instruction disassembly, P-Code
+      ...: for insn in result.instructions:
+      ...:     print(f"-- {insn.address.offset:#x}: {insn.asm_mnem} {insn.asm_body}")
+      ...:     for op in insn.ops:
+      ...:         print(f"{op.seq.uniq}) {PcodePrettyPrinter.fmt_op(op)}")
 
 Command Line Usage Example
 --------------------------
