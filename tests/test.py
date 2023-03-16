@@ -3,13 +3,19 @@
 
 from unittest import main, TestCase
 
-from pypcode import ArchLanguage, Context
+from pypcode import ArchLanguage, Context, ContextCreationError
 
 
 class Tests(TestCase):
     """
     Basic tests
     """
+
+    def test_failed_context_creation(self):
+        lang = ArchLanguage.from_id("x86:LE:64:default")
+        bad_lang = ArchLanguage("/bad/arch/path", lang.ldef)
+        with self.assertRaises(ContextCreationError):
+            Context(bad_lang)
 
     def test_x86_64_translation(self):
         lang = ArchLanguage.from_id("x86:LE:64:default")
