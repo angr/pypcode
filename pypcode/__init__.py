@@ -409,6 +409,8 @@ class Context:
         res_c = csleigh_translate(self.ctx_c, c_data, max_bytes, base, max_inst, bb_terminating)
         res = TranslationResult.from_c(self, res_c)
         csleigh_freeResult(res_c)
+        if res.error:
+            raise res.error
         return res
 
     def get_register_name(self, space: "AddrSpace", offset: int, size: int) -> str:
