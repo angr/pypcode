@@ -331,6 +331,12 @@ class Arch:
                 yield Arch(archname, ldefpath)
 
 
+class ContextCreationError(Exception):
+    """
+    An error during context creation.
+    """
+
+
 class Context:
     """
     Context for translation.
@@ -351,6 +357,8 @@ class Context:
         self._cached_addr_spaces = {}
         self.lang = lang
         self.ctx_c = csleigh_createContext(self.lang.slafile_path.encode("utf-8"))
+        if not self.ctx_c:
+            raise ContextCreationError()
         self.lang.init_context_from_pspec(self.ctx_c)
 
         count_a = ffi.new("unsigned int *count")

@@ -256,10 +256,13 @@ public:
         ElementId::initialize();
 
         LOG("%p Loading slafile...", this);
-        // FIXME: try/catch XmlError
-        m_document = m_document_storage.openDocument(path);
-        m_tags = m_document->getRoot();
-        m_document_storage.registerTag(m_tags);
+        try {
+            m_document = m_document_storage.openDocument(path);
+            m_tags = m_document->getRoot();
+            m_document_storage.registerTag(m_tags);
+        } catch (DecoderError &e) {
+            return false;
+        }
 
         LOG("Setting up translator");
         m_sleigh.reset(new Sleigh(&m_loader, &m_context_db));
