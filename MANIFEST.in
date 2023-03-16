@@ -1,5 +1,9 @@
 graft pypcode
 prune pypcode/native/build
+prune pypcode/bin
 include LICENSE.txt
 include build_cffi.py
 graft tests
+global-exclude *.so
+global-exclude *.gitignore
+
