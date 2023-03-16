@@ -274,6 +274,17 @@ class ArchLanguage:
             assert e.tag == "set"
             csleigh_setVariableDefault(ctx, e.attrib["name"].encode("utf-8"), int(e.attrib["val"]))
 
+    @classmethod
+    def from_id(cls, langid: str) -> Optional["ArchLanguage"]:
+        """
+        Return language with given id, or None if the language could not be found.
+        """
+        for arch in Arch.enumerate():
+            for lang in arch.languages:
+                if lang.id == langid:
+                    return lang
+        return None
+
 
 class Arch:
     """
