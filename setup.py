@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
+from setuptools import setup
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 
-from setuptools import setup
-import build_cffi
+import build_cffi  # pylint:disable=wrong-import-position
 
 
 def add_pkg_data_dirs(pkg, dirs):
@@ -24,6 +24,10 @@ try:
     from wheel.bdist_wheel import bdist_wheel
 
     class bdist_wheel_abi3(bdist_wheel):
+        """
+        Helper to generate correct platform tag for stable ABI wheels
+        """
+
         def get_tag(self):
             python, abi, plat = super().get_tag()
             if python.startswith("cp"):

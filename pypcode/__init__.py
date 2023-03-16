@@ -8,8 +8,8 @@ import xml.etree.ElementTree as ET
 from enum import Enum
 from typing import TYPE_CHECKING, cast, Dict, Generator, Sequence, Optional, Mapping, Union, Tuple
 
-from ._csleigh import ffi
-from ._csleigh.lib import (
+from ._csleigh import ffi  # pylint:disable=no-name-in-module
+from ._csleigh.lib import (  # pylint:disable=no-name-in-module,import-error
     csleigh_Addr_getSpaceFromConst,
     csleigh_Addr_isConstant,
     csleigh_AddrSpace_getName,
