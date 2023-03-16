@@ -74,3 +74,5 @@ add_custom_target(
 	BYPRODUCTS ${CMAKE_BINARY_DIR}/csleigh.i
 	VERBATIM
 )
+
+install(TARGETS sleigh DESTINATION bin)
