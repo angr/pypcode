@@ -1,3 +1,6 @@
+ci:
+    skip: [pylint]
+
 exclude: ^pypcode/native|^pypcode/processors
 repos:
 
