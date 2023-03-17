@@ -3,6 +3,8 @@
 Pythonic interface to SLEIGH by way of the csleigh C API wrapper and CFFI.
 """
 
+__version__ = "1.1.3.dev0"
+
 import os.path
 import xml.etree.ElementTree as ET
 from enum import Enum
