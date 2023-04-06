@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "cffi", "cmake"]
+requires = ["setuptools", "nanobind", "cmake"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]

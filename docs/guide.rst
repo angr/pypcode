@@ -19,27 +19,25 @@ The very latest development version can be installed from GitHub via:
 Usage Example
 -------------
 
+Disassemble:
+
 .. ipython::
 
-   In [0]: from pypcode import Arch, Context, PcodePrettyPrinter
-      ...:
-      ...: # Enumerate available languages, select target language
-      ...: langs = {lang.id: lang for arch in Arch.enumerate() for lang in arch.languages}
-      ...: lang = langs["x86:LE:64:default"]
-      ...:
-      ...: # Load machine code
-      ...: machine_code = b"\x48\x35\x78\x56\x34\x12\xc3"
-      ...: base_address = 0
-      ...:
-      ...: # Create a translation context, lift a block
-      ...: ctx = Context(lang)
-      ...: result = ctx.translate(machine_code, base_address, bb_terminating=True)
-      ...:
-      ...: # Print instruction disassembly, P-Code
-      ...: for insn in result.instructions:
-      ...:     print(f"-- {insn.address.offset:#x}: {insn.asm_mnem} {insn.asm_body}")
-      ...:     for op in insn.ops:
-      ...:         print(f"{op.seq.uniq}) {PcodePrettyPrinter.fmt_op(op)}")
+   In [0]: from pypcode import Context, PcodePrettyPrinter
+      ...: ctx = Context("x86:LE:64:default")
+      ...: dx = ctx.disassemble(b"\x48\x35\x78\x56\x34\x12\xc3")
+      ...: for ins in dx.instructions:
+      ...:     print(f"{ins.addr.offset:#x}/{ins.length}: {ins.mnem} {ins.body}")
+
+Translate to P-Code:
+
+.. ipython::
+
+   In [0]: from pypcode import Context, PcodePrettyPrinter
+      ...: ctx = Context("x86:LE:64:default")
+      ...: tx = ctx.translate(b"\x48\x35\x78\x56\x34\x12\xc3")
+      ...: for op in tx.ops:
+      ...:     print(PcodePrettyPrinter.fmt_op(op))
 
 Command Line Usage Example
 --------------------------
