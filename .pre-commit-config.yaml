@@ -1,7 +1,7 @@
 ci:
     skip: [pylint]
 
-exclude: ^pypcode/native|^pypcode/processors
+exclude: ^pypcode/native/sleigh|^pypcode/processors
 repos:
 
 #
