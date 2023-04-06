@@ -476,6 +476,13 @@ DisassemblyCache::DisassemblyCache(Translate *trans,ContextCache *ccache,AddrSpa
   initialize(cachesize,windowsize);		// Set default settings for the cache
 }
 
+void DisassemblyCache::fastReset(void)
+
+{
+  for(int4 i=0;i<minimumreuse;++i)
+    list[i]->setParserState(ParserContext::uninitialized);
+}
+
 /// Return a (possibly cached) ParserContext that is associated with \e addr
 /// If n different calls to this interface are made with n different Addresses, if
 ///    - n <= minimumreuse   AND
@@ -540,6 +547,14 @@ void Sleigh::reset(LoadImage *ld,ContextDatabase *c_db)
   context_db = c_db;
   cache = new ContextCache(c_db);
   discache = (DisassemblyCache *)0;
+}
+
+void Sleigh::fastReset()
+
+{
+  if (discache) {
+    discache->fastReset();
+  }
 }
 
 /// The .sla file from the document store is loaded and cache objects are prepared

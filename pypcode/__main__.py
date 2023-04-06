@@ -11,7 +11,7 @@ import logging
 import sys
 from difflib import SequenceMatcher
 
-from pypcode import Arch, BadDataError, Context, PcodePrettyPrinter, UnimplError
+from pypcode import Arch, BadDataError, Context, OpCode, PcodePrettyPrinter, TranslateFlags, UnimplError
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format="[%(name)s:%(levelname)s] %(message)s")
@@ -39,13 +39,6 @@ def main():
         default=0,
         type=int,
         help="maximum number of instructions to translate",
-    )
-    ap.add_argument(
-        "-r",
-        "--raw",
-        action="store_true",
-        default=False,
-        help="show raw p-code (disable pretty-printing)",
     )
     ap.add_argument(
         "-b",
@@ -87,18 +80,25 @@ def main():
     ctx = Context(langs[args.langid])
 
     try:
-        res = ctx.translate(code, base, args.max_instructions, bb_terminating=args.basic_block)
+        flags = TranslateFlags.BB_TERMINATING if args.basic_block else 0
+        res = ctx.translate(code, base, max_instructions=args.max_instructions, flags=flags)
+
+        last_imark_idx = 0
+        for i, op in enumerate(res.ops):
+            if op.opcode == OpCode.IMARK:
+                last_imark_idx = i
+                disas_addr = op.inputs[0].offset
+                disas_offset = disas_addr - base
+                disas_len = sum(vn.size for vn in op.inputs)
+                disas_slice = code[disas_offset : disas_offset + disas_len]
+                for insn in ctx.disassemble(disas_slice, disas_addr).instructions:
+                    print(f"{insn.addr.offset:#x}/{insn.length}: {insn.mnem} {insn.body}")
+            else:
+                print(f" {i - last_imark_idx - 1:3d}: {PcodePrettyPrinter.fmt_op(op)}")
+        print("")
     except (BadDataError, UnimplError) as e:
         print(f"An error occurred during translation: {e}")
         sys.exit(1)
-
-    for insn in res.instructions:
-        print("-" * 80)
-        print("%08x/%d: %s %s" % (insn.address.offset, insn.length, insn.asm_mnem, insn.asm_body))
-        print("-" * 80)
-        for op in insn.ops:
-            print("%3d: %s" % (op.seq.uniq, str(op) if args.raw else PcodePrettyPrinter.fmt_op(op)))
-        print("")
 
 
 if __name__ == "__main__":

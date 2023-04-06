@@ -1,12 +1,53 @@
 #!/usr/bin/env python3
 import os
+import platform
+import struct
+import subprocess
 import sys
-from setuptools import setup
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
+
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(ROOT_DIR)
+LIB_SRC_DIR = os.path.join(ROOT_DIR, "pypcode", "native")
 
-import build_cffi  # pylint:disable=wrong-import-position
+
+class BuildExtension(build_ext):
+    """
+    Runs cmake to build the pypcode_native extension, sleigh binary, and runs sleigh to build .sla files.
+    """
+
+    def run(self):
+        try:
+            subprocess.check_output(["cmake", "--version"])
+        except OSError as exc:
+            raise RuntimeError("Please install CMake to build") from exc
+
+        install_pkg_root = os.path.abspath(os.path.join(ROOT_DIR if self.inplace else self.build_lib, "pypcode"))
+        cmake_install_prefix = install_pkg_root
+        cmake_config_args = [
+            f"-DCMAKE_INSTALL_PREFIX={cmake_install_prefix}",
+            f"-DPython_EXECUTABLE={sys.executable}",
+        ]
+        cmake_build_args = []
+        if platform.system() == "Windows":
+            is_64b = struct.calcsize("P") * 8 == 64
+            cmake_config_args += ["-A", "x64" if is_64b else "Win32"]
+            cmake_build_args += ["--config", "Release"]
+
+        # Build sleigh and pypcode_native extension
+        subprocess.check_call(["cmake", "-S", ".", "-B", "build"] + cmake_config_args, cwd=LIB_SRC_DIR)
+        subprocess.check_call(
+            ["cmake", "--build", "build", "--parallel", "--verbose"] + cmake_build_args,
+            cwd=LIB_SRC_DIR,
+        )
+        subprocess.check_call(["cmake", "--install", "build"], cwd=LIB_SRC_DIR)
+
+        # Build sla files
+        bin_ext = ".exe" if platform.system() == "Windows" else ""
+        sleigh_bin = os.path.join(install_pkg_root, "bin", "sleigh" + bin_ext)
+        specfiles_dir = os.path.join(install_pkg_root, "processors")
+        subprocess.check_call([sleigh_bin, "-a", specfiles_dir])
 
 
 def add_pkg_data_dirs(pkg, dirs):
@@ -18,32 +59,10 @@ def add_pkg_data_dirs(pkg, dirs):
     return pkg_data
 
 
-cmdclass = {"build_ext": build_cffi.FfiPreBuildExtension}
-
-try:
-    from wheel.bdist_wheel import bdist_wheel
-
-    class bdist_wheel_abi3(bdist_wheel):
-        """
-        Helper to generate correct platform tag for stable ABI wheels
-        """
-
-        def get_tag(self):
-            python, abi, plat = super().get_tag()
-            if python.startswith("cp"):
-                return "cp38", "abi3", plat
-            return python, abi, plat
-
-    cmdclass["bdist_wheel"] = bdist_wheel_abi3
-except ImportError:
-    pass
-
-
 setup(
+    ext_modules=[Extension(name="pypcode_native", sources=[])],
     package_data={
-        "pypcode": add_pkg_data_dirs("pypcode", ["_csleigh", "bin", "docs", "processors"])
-        + ["py.typed", "_csleigh.pyi"]
+        "pypcode": add_pkg_data_dirs("pypcode", ["bin", "docs", "processors"]) + ["py.typed", "pypcode_native.pyi"]
     },
-    cffi_modules=["build_cffi.py:ffibuilder"],
-    cmdclass=cmdclass,
+    cmdclass={"build_ext": BuildExtension},
 )
