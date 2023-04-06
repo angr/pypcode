@@ -2,3 +2,11 @@
 __pycache__/
 build/
 dist/
+pypcode/native/build/
+pypcode/bin/
+docs/_build/
+*.so
+*.sla
+*.manifest
+*.gradle
+*.java
