@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18...3.22)
-project(pypcode_native)
+project(pypcode)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -24,37 +24,37 @@ else()
 endif()
 
 set(SLEIGH_COMMON
-	sleigh/address.cc
-	sleigh/context.cc
-	sleigh/float.cc
-	sleigh/globalcontext.cc
-	sleigh/marshal.cc
-	sleigh/opcodes.cc
-	sleigh/pcodecompile.cc
-	sleigh/pcodeparse.cc
-	sleigh/pcoderaw.cc
-	sleigh/semantics.cc
-	sleigh/sleigh.cc
-	sleigh/sleighbase.cc
-	sleigh/slghpatexpress.cc
-	sleigh/slghpattern.cc
-	sleigh/slghsymbol.cc
-	sleigh/space.cc
-	sleigh/translate.cc
-	sleigh/xml.cc
+	pypcode/sleigh/address.cc
+	pypcode/sleigh/context.cc
+	pypcode/sleigh/float.cc
+	pypcode/sleigh/globalcontext.cc
+	pypcode/sleigh/marshal.cc
+	pypcode/sleigh/opcodes.cc
+	pypcode/sleigh/pcodecompile.cc
+	pypcode/sleigh/pcodeparse.cc
+	pypcode/sleigh/pcoderaw.cc
+	pypcode/sleigh/semantics.cc
+	pypcode/sleigh/sleigh.cc
+	pypcode/sleigh/sleighbase.cc
+	pypcode/sleigh/slghpatexpress.cc
+	pypcode/sleigh/slghpattern.cc
+	pypcode/sleigh/slghsymbol.cc
+	pypcode/sleigh/space.cc
+	pypcode/sleigh/translate.cc
+	pypcode/sleigh/xml.cc
 	)
 
 add_executable(sleigh
-	sleigh/filemanage.cc
-	sleigh/slgh_compile.cc
-	sleigh/slghparse.cc
-	sleigh/slghscan.cc
+	pypcode/sleigh/filemanage.cc
+	pypcode/sleigh/slgh_compile.cc
+	pypcode/sleigh/slghparse.cc
+	pypcode/sleigh/slghscan.cc
 	${SLEIGH_COMMON}
 	)
 install(TARGETS sleigh DESTINATION bin)
 
 nanobind_add_module(pypcode_native
-	pypcode_native.cpp
+	pypcode/pypcode_native.cpp
 	${SLEIGH_COMMON}
 	)
 install(TARGETS pypcode_native DESTINATION .)

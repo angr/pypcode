@@ -1,7 +1,7 @@
 ci:
     skip: [pylint]
 
-exclude: ^pypcode/native/sleigh|^pypcode/processors
+exclude: ^pypcode/sleigh|^pypcode/processors
 repos:
 
 #
@@ -79,7 +79,7 @@ repos:
     rev: v16.0.0
     hooks:
     -   id: clang-format
-        files: pypcode/native/pypcode_native.cpp
+        files: pypcode/pypcode_native.cpp
 
 
 #
