@@ -1,7 +1,0 @@
-*.java
-Module.manifest
-build.gradle
-certification.manifest
-build/
-bin/
-lib/
