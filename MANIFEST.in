@@ -1,8 +1,7 @@
 graft pypcode
-prune pypcode/native/build
 prune pypcode/bin
+include CMakeLists.txt
 include LICENSE.txt
 graft tests
 global-exclude *.so
 global-exclude *.gitignore
-

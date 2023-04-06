@@ -9,7 +9,7 @@ from setuptools.command.build_ext import build_ext
 
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
-LIB_SRC_DIR = os.path.join(ROOT_DIR, "pypcode", "native")
+BUILD_DIR = os.path.join(ROOT_DIR, "build", "native")
 
 
 class BuildExtension(build_ext):
@@ -36,12 +36,12 @@ class BuildExtension(build_ext):
             cmake_build_args += ["--config", "Release"]
 
         # Build sleigh and pypcode_native extension
-        subprocess.check_call(["cmake", "-S", ".", "-B", "build"] + cmake_config_args, cwd=LIB_SRC_DIR)
+        subprocess.check_call(["cmake", "-S", ".", "-B", BUILD_DIR] + cmake_config_args, cwd=ROOT_DIR)
         subprocess.check_call(
-            ["cmake", "--build", "build", "--parallel", "--verbose"] + cmake_build_args,
-            cwd=LIB_SRC_DIR,
+            ["cmake", "--build", BUILD_DIR, "--parallel", "--verbose"] + cmake_build_args,
+            cwd=ROOT_DIR,
         )
-        subprocess.check_call(["cmake", "--install", "build"], cwd=LIB_SRC_DIR)
+        subprocess.check_call(["cmake", "--install", BUILD_DIR], cwd=ROOT_DIR)
 
         # Build sla files
         bin_ext = ".exe" if platform.system() == "Windows" else ""
