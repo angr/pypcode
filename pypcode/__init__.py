@@ -271,8 +271,11 @@ class ArchLanguage:
         if cs is None:
             return
         for e in cs:
-            assert e.tag == "set"
-            csleigh_setVariableDefault(ctx, e.attrib["name"].encode("utf-8"), int(e.attrib["val"]))
+            if e.attrib['name'] == "vle":
+                csleigh_setVariableDefault(ctx, e.attrib['name'].encode('utf-8'), 0)
+            else:
+                assert e.tag == "set"
+                csleigh_setVariableDefault(ctx, e.attrib["name"].encode("utf-8"), int(e.attrib["val"]))
 
 
 class Arch:
