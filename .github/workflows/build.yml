@@ -61,6 +61,10 @@ jobs:
           - { wheel: cp311-macosx_x86_64,    os: macos-latest   }
           - { wheel: cp311-manylinux_x86_64, os: ubuntu-latest  }
           - { wheel: cp311-win_amd64,        os: windows-latest }
+          - { wheel: cp312-macosx_arm64,     os: macos-latest   }
+          - { wheel: cp312-macosx_x86_64,    os: macos-latest   }
+          - { wheel: cp312-manylinux_x86_64, os: ubuntu-latest  }
+          - { wheel: cp312-win_amd64,        os: windows-latest }
 
           # Currently broken on pypy3.8
           # - { wheel: pp38-macosx_x86_64,     os: macos-latest   }
