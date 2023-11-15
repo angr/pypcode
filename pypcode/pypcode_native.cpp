@@ -10,6 +10,7 @@
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
 
+#include "sleigh/error.hh"
 #include "sleigh/loadimage.hh"
 #include "sleigh/opcodes.hh"
 #include "sleigh/sleigh.hh"
@@ -400,6 +401,7 @@ NB_MODULE(pypcode_native, m)
 
     m.doc() = "pypcode native extension providing machine code disassembly and translation to P-Code.";
 
+    nb::exception<LowlevelError>(m, "LowlevelError"); // "The lowest level error"
     nb::exception<BadDataError>(m, "BadDataError"); // "Exception for bad instruction data"
     nb::exception<UnimplError>(m, "UnimplError"); // "Exception for encountering unimplemented P-Code"
     nb::exception<DecoderError>(m, "DecoderError"); // "An exception thrown by the XML parser"

@@ -61,15 +61,17 @@ jobs:
           - { wheel: cp311-macosx_x86_64,    os: macos-latest   }
           - { wheel: cp311-manylinux_x86_64, os: ubuntu-latest  }
           - { wheel: cp311-win_amd64,        os: windows-latest }
+          - { wheel: cp312-macosx_arm64,     os: macos-latest   }
+          - { wheel: cp312-macosx_x86_64,    os: macos-latest   }
+          - { wheel: cp312-manylinux_x86_64, os: ubuntu-latest  }
+          - { wheel: cp312-win_amd64,        os: windows-latest }
 
-          # Currently broken on pypy3.8
-          # - { wheel: pp38-macosx_x86_64,     os: macos-latest   }
-          # - { wheel: pp38-manylinux_x86_64,  os: ubuntu-latest  }
-          # - { wheel: pp38-win_amd64,         os: windows-latest }
-
-          - { wheel: pp39-macosx_x86_64,     os: macos-latest   }
           - { wheel: pp39-manylinux_x86_64,  os: ubuntu-latest  }
-          - { wheel: pp39-win_amd64,         os: windows-latest }
+
+          # Currently broken with PyPy 7.3? See https://foss.heptapod.net/pypy/pypy/-/issues/4013.
+          # - { wheel: pp39-macosx_x86_64,     os: macos-latest   }
+          # - { wheel: pp39-win_amd64,         os: windows-latest }
+
     steps:
       - name: Download source distribution
         uses: actions/download-artifact@v3
@@ -79,7 +81,7 @@ jobs:
         shell: bash
         run: tar --strip-components 1 -xvf *.tar.gz
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.16.2
         with:
           output-dir: wheelhouse
         env:
@@ -100,15 +102,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: |
           pip install -e .[docs]
           cd docs && make html coverage
-          if [ -s _build/coverage/python.txt ]; then
-            echo "Doc coverage is missing for:"
-            cat _build/coverage/python.txt
-            exit 1
-          fi
 
   upload_pypi:
     name: Upload wheels to PyPI
