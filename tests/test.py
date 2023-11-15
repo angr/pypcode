@@ -38,7 +38,7 @@ def get_imarks(translation: Translation) -> List[PcodeOp]:
 #         log.debug("%x/%d: %s %s", ins.addr.offset, ins.length, ins.mnem, ins.body)
 
 
-class ContextTests(TestCase):
+class TestContext(TestCase):
     """
     Basic Context tests
     """
@@ -95,7 +95,7 @@ class ContextTests(TestCase):
         log.debug("--")
 
 
-class RegistersTests(TestCase):
+class TestRegisterLookup(TestCase):
     """
     Context register lookup tests
     """
@@ -110,7 +110,7 @@ class RegistersTests(TestCase):
         assert ctx.getRegisterName(ri.space, ri.offset, ri.size) == "RAX"
 
 
-class AddrSpaceTests(TestCase):
+class TestAddrSpace(TestCase):
     """
     AddrSpace tests
     """
@@ -120,7 +120,7 @@ class AddrSpaceTests(TestCase):
         assert ctx.translate(b"\xeb\xfe").ops[1].inputs[0].space.name == "ram"
 
 
-class VarnodeTests(TestCase):
+class TestVarnode(TestCase):
     """
     Varnode tests
     """
@@ -137,7 +137,7 @@ class VarnodeTests(TestCase):
         assert tx.ops[1].inputs[1].getRegisterName() == ""
 
 
-class DisassembleTests(TestCase):
+class TestDisassemble(TestCase):
     """
     Context::disassemble tests
     """
@@ -200,7 +200,7 @@ class DisassembleTests(TestCase):
         assert len(dx.instructions) == 1
 
 
-class TranslateTests(TestCase):
+class TestTranslate(TestCase):
     """
     Context::translate tests
     """
