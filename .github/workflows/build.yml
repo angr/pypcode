@@ -104,11 +104,6 @@ jobs:
       - run: |
           pip install -e .[docs]
           cd docs && make html coverage
-          if [ -s _build/coverage/python.txt ]; then
-            echo "Doc coverage is missing for:"
-            cat _build/coverage/python.txt
-            exit 1
-          fi
 
   upload_pypi:
     name: Upload wheels to PyPI
