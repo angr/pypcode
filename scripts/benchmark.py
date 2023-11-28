@@ -126,7 +126,10 @@ def benchmark_pypcode(blocks: List[Block], iter_ops: bool = False, iter_varnodes
     assert pypcode is not None
 
     start_time = time.time()
-    ctx = pypcode.Context("x86:LE:64:default")
+    lang = langs = next(
+        lang for arch in pypcode.Arch.enumerate() for lang in arch.languages if lang.id == "x86:LE:64:default"
+    )
+    ctx = pypcode.Context(lang)
     startup_duration = time.time() - start_time
 
     start_time = time.time()
@@ -134,12 +137,14 @@ def benchmark_pypcode(blocks: List[Block], iter_ops: bool = False, iter_varnodes
     for block in blocks:
         t = ctx.translate(block.data, block.addr)
         if iter_ops and not iter_varnodes:
-            for _ in t.ops:
-                count += 1
-        if iter_varnodes:
-            for op in t.ops:
-                for _ in op.inputs:
+            for ins in t.instructions:
+                for _ in ins.ops:
                     count += 1
+        if iter_varnodes:
+            for ins in t.instructions:
+                for op in ins.ops:
+                    for _ in op.inputs:
+                        count += 1
     translation_duration = time.time() - start_time
 
     return BenchmarkResult(startup_duration, translation_duration)
@@ -234,7 +239,7 @@ def main() -> None:
     if HAVE_CAPSTONE:
         imports.append(("capstone", capstone.__version__, CAPSTONE_IMPORT_DURATION))
     if HAVE_PYPCODE:
-        imports.append(("pypcode", pypcode.__version__, PYPCODE_IMPORT_DURATION))
+        imports.append(("pypcode", "1.1.2", PYPCODE_IMPORT_DURATION))
     if HAVE_PYVEX:
         imports.append(("pyvex", pyvex.__version__, PYVEX_IMPORT_DURATION))
     for name, version, import_duration in imports:
@@ -253,7 +258,7 @@ def main() -> None:
             )
         )
     if HAVE_PYPCODE and "pypcode" not in args.skip:
-        benchmarks.append(("pypcode Disassemble", benchmark_pypcode_disassembly))
+        # benchmarks.append(("pypcode Disassemble", benchmark_pypcode_disassembly))
         benchmarks.extend(
             gen_benchmarks_from_configurations(
                 "pypcode Lift",
