@@ -327,7 +327,7 @@ class OpFormatSpecial(OpFormat):
         return f"return {self.fmt_vn(op.inputs[0])}"
 
     def fmt_STORE(self, op: PcodeOp) -> str:
-        return f"*[{op.inputs[0].getSpaceFromConst().name}]{self.fmt_vn(op.inputs[1])} = {op.inputs[2]}"
+        return f"*[{op.inputs[0].getSpaceFromConst().name}]{self.fmt_vn(op.inputs[1])} = {self.fmt_vn(op.inputs[2])}"
 
     def fmt(self, op: PcodeOp) -> str:
         return {
