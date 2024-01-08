@@ -71,7 +71,7 @@ repos:
 
 # Last modifier: Coding Standard
 -   repo: https://github.com/psf/black
-    rev: 23.11.0
+    rev: 23.12.1
     hooks:
     -   id: black
 
@@ -105,12 +105,12 @@ repos:
     -   id: check-docstring-first
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.6
+    rev: v0.1.11
     hooks:
     -   id: ruff
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+    rev: v1.8.0
     hooks:
     -   id: mypy
 
