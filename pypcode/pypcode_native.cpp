@@ -510,7 +510,8 @@ NB_MODULE(pypcode_native, m)
         .value("NEW", OpCode::CPUI_NEW, "Allocate a new object (new)")
         .value("INSERT", OpCode::CPUI_INSERT, "Insert a bit-range")
         .value("EXTRACT", OpCode::CPUI_EXTRACT, "Extract a bit-range")
-        .value("POPCOUNT", OpCode::CPUI_POPCOUNT, "Count the 1-bits");
+        .value("POPCOUNT", OpCode::CPUI_POPCOUNT, "Count the 1-bits")
+        .value("LZCOUNT", OpCode::CPUI_LZCOUNT, "Count the leading 0-bits");
 
     nb::class_<PcodeOp>(m, "PcodeOp", "Low-level representation of a single P-Code operation.")
         .def_ro("opcode", &PcodeOp::m_opcode, "opcode(self) -> OpCode\nOpcode for this operation.")

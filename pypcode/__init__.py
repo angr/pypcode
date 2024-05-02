@@ -408,6 +408,7 @@ class PcodePrettyPrinter:
         OpCode.LOAD: OpFormatSpecial(),
         OpCode.NEW: OpFormatFunc("newobject"),
         OpCode.POPCOUNT: OpFormatFunc("popcount"),
+        OpCode.LZCOUNT: OpFormatFunc("lzcount"),
         OpCode.RETURN: OpFormatSpecial(),
         OpCode.STORE: OpFormatSpecial(),
     }
