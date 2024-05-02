@@ -10,14 +10,14 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4.1.4
+      - uses: actions/setup-python@v5.1.0
         with:
-          python-version: '3.8'
+          python-version: '3.10'
       - run: |
           python -m pip install pylint
           python -m pip install -e .
-      - uses: pre-commit/action@v3.0.0
+      - uses: pre-commit/action@v3.0.1
         with:
           extra_args: pylint --all-files
 
@@ -25,15 +25,15 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4.1.4
+      - uses: actions/setup-python@v5.1.0
         with:
-          python-version: '3.8'
+          python-version: '3.10'
       - name: Build sdist
         run: |
           python -m pip install --user build
           python -m build --sdist
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4.3.3
         with:
           name: source
           path: dist/*.tar.gz
@@ -45,92 +45,46 @@ jobs:
     strategy:
       matrix:
         include:
-          - { wheel: cp38-macosx_arm64,      os: macos-latest   }
-          - { wheel: cp38-macosx_x86_64,     os: macos-latest   }
-          - { wheel: cp38-manylinux_x86_64,  os: ubuntu-latest  }
-          - { wheel: cp38-win_amd64,         os: windows-latest }
-          - { wheel: cp39-macosx_arm64,      os: macos-latest   }
-          - { wheel: cp39-macosx_x86_64,     os: macos-latest   }
-          - { wheel: cp39-manylinux_x86_64,  os: ubuntu-latest  }
-          - { wheel: cp39-win_amd64,         os: windows-latest }
-          - { wheel: cp310-macosx_arm64,     os: macos-latest   }
-          - { wheel: cp310-macosx_x86_64,    os: macos-latest   }
-          - { wheel: cp310-manylinux_x86_64, os: ubuntu-latest  }
-          - { wheel: cp310-win_amd64,        os: windows-latest }
-          - { wheel: cp311-macosx_arm64,     os: macos-latest   }
-          - { wheel: cp311-macosx_x86_64,    os: macos-latest   }
-          - { wheel: cp311-manylinux_x86_64, os: ubuntu-latest  }
-          - { wheel: cp311-win_amd64,        os: windows-latest }
-          - { wheel: cp312-macosx_arm64,     os: macos-latest   }
-          - { wheel: cp312-macosx_x86_64,    os: macos-latest   }
-          - { wheel: cp312-manylinux_x86_64, os: ubuntu-latest  }
-          - { wheel: cp312-win_amd64,        os: windows-latest }
-          - { wheel: pp39-manylinux_x86_64,  os: ubuntu-latest  }
-          # Currently broken with PyPy 7.3? See https://foss.heptapod.net/pypy/pypy/-/issues/4013.
-          # - { wheel: pp39-macosx_x86_64,     os: macos-latest   }
-          # - { wheel: pp39-win_amd64,         os: windows-latest }
+          - { arch: arm64,  wheel: cp310-macosx_arm64,     os: macos-latest   }
+          - { arch: x86_64, wheel: cp310-macosx_x86_64,    os: macos-13       }
+          - { arch: x86_64, wheel: cp310-manylinux_x86_64, os: ubuntu-latest  }
+          - { arch: x86_64, wheel: cp310-win_amd64,        os: windows-latest }
+          - { arch: arm64,  wheel: cp311-macosx_arm64,     os: macos-latest   }
+          - { arch: x86_64, wheel: cp311-macosx_x86_64,    os: macos-13       }
+          - { arch: x86_64, wheel: cp311-manylinux_x86_64, os: ubuntu-latest  }
+          - { arch: x86_64, wheel: cp311-win_amd64,        os: windows-latest }
+          - { arch: arm64,  wheel: cp312-macosx_arm64,     os: macos-latest   }
+          - { arch: x86_64, wheel: cp312-macosx_x86_64,    os: macos-13       }
+          - { arch: x86_64, wheel: cp312-manylinux_x86_64, os: ubuntu-latest  }
+          - { arch: x86_64, wheel: cp312-win_amd64,        os: windows-latest }
     steps:
       - name: Download source distribution
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: source
       - name: Unpack source distribution
         shell: bash
         run: tar --strip-components 1 -xvf *.tar.gz
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.17.0
         with:
           output-dir: wheelhouse
         env:
-          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_ARCHS_MACOS: ${{ matrix.arch }}
           CIBW_BUILD: ${{ matrix.wheel }}
           CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
-          CIBW_TEST_SKIP: "*_arm64"
           CIBW_BUILD_VERBOSITY: 1
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4.3.3
         with:
           name: ${{ matrix.wheel }}
           path: ./wheelhouse/*.whl
-
-  test_macos_arm64_wheels:
-    needs: build_wheels
-    name: Test ${{ matrix.wheel }} macOS ARM64 wheel
-    runs-on: [macOS, ARM64]
-    strategy:
-      matrix:
-        include:
-          - { wheel: cp310-macosx_arm64, python: '3.10' }
-          - { wheel: cp311-macosx_arm64, python: '3.11' }
-          - { wheel: cp312-macosx_arm64, python: '3.12' }
-          # Not supported by setup-python for the self-hosted runner:
-          #   Error: The version '3.9' with architecture 'arm64' was not found for macOS 13.6.
-          # - { wheel: cp38-macosx_arm64,  python: '3.8' }
-          # - { wheel: cp39-macosx_arm64,  python: '3.9' }
-    steps:
-      - run: rm -rf dist
-      - uses: actions/download-artifact@v3
-        with:
-          name: source
-          path: dist
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.wheel }}
-          path: dist
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python }}
-      - run: |
-          pip install --force-reinstall ./dist/*.whl
-          tar xvf ./dist/pypcode-*.tar.gz
-          cd pypcode-*/tests
-          python -m unittest discover -v -s .
 
   build_docs:
     name: Build docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4.1.4
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.12'
       - run: |
@@ -139,7 +93,7 @@ jobs:
 
   upload_pypi:
     name: Upload wheels to PyPI
-    needs: [lint, build_docs, build_sdist, build_wheels, test_macos_arm64_wheels]
+    needs: [lint, build_docs, build_sdist, build_wheels]
     runs-on: ubuntu-latest
     # Upload to PyPI on every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
