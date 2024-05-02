@@ -16,12 +16,14 @@
 /// \file opcodes.hh
 /// \brief All the individual p-code operations
 
-#ifndef __CPUI_OPCODES__
-#define __CPUI_OPCODES__
+#ifndef __OPCODES_HH__
+#define __OPCODES_HH__
 
 #include <string>
 
-using namespace std;
+namespace ghidra {
+
+using std::string;
 
 /// \brief The op-code defining a specific p-code operation (PcodeOp)
 ///
@@ -33,9 +35,6 @@ using namespace std;
 ///   - Logical operations
 ///   - Extension and truncation operations
 enum OpCode {
-  CPUI_IMARK = 0,
-
-
   CPUI_COPY = 1,		///< Copy one operand to another
   CPUI_LOAD = 2,		///< Load from a pointer into a specified address space
   CPUI_STORE = 3,		///< Store at a pointer into a specified address space
@@ -126,8 +125,9 @@ enum OpCode {
   CPUI_INSERT = 70,		///< Insert a bit-range
   CPUI_EXTRACT = 71,		///< Extract a bit-range
   CPUI_POPCOUNT = 72,		///< Count the 1-bits
+  CPUI_LZCOUNT = 73,		///< Count the leading 0-bits
 
-  CPUI_MAX = 73			///< Value indicating the end of the op-code values
+  CPUI_MAX = 74			///< Value indicating the end of the op-code values
 };
 
 extern const char *get_opname(OpCode opc);		///< Convert an OpCode to the name as a string
@@ -135,4 +135,5 @@ extern OpCode get_opcode(const string &nm);		///< Convert a name string to the m
 
 extern OpCode get_booleanflip(OpCode opc,bool &reorder);	///< Get the complementary OpCode
 
+} // End namespace ghidra
 #endif

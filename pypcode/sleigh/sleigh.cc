@@ -16,6 +16,8 @@
 #include "sleigh.hh"
 #include "loadimage.hh"
 
+namespace ghidra {
+
 PcodeCacher::PcodeCacher(void)
 
 {
@@ -186,6 +188,12 @@ AddrSpace *SleighBuilder::generatePointer(const VarnodeTpl *vntpl,VarnodeData &v
   return hand.space;
 }
 
+/// \brief Add in an additional offset to the address of a dynamic Varnode
+///
+/// The Varnode is ultimately read/written via LOAD/STORE operation AND has undergone a truncation
+/// operation, so an additional offset needs to get added to the pointer referencing the Varnode.
+/// \param op is the LOAD/STORE operation being generated
+/// \param vntpl is the dynamic Varnode
 void SleighBuilder::generatePointerAdd(PcodeData *op,const VarnodeTpl *vntpl)
 
 {
@@ -476,13 +484,6 @@ DisassemblyCache::DisassemblyCache(Translate *trans,ContextCache *ccache,AddrSpa
   initialize(cachesize,windowsize);		// Set default settings for the cache
 }
 
-void DisassemblyCache::fastReset(void)
-
-{
-  for(int4 i=0;i<minimumreuse;++i)
-    list[i]->setParserState(ParserContext::uninitialized);
-}
-
 /// Return a (possibly cached) ParserContext that is associated with \e addr
 /// If n different calls to this interface are made with n different Addresses, if
 ///    - n <= minimumreuse   AND
@@ -547,14 +548,6 @@ void Sleigh::reset(LoadImage *ld,ContextDatabase *c_db)
   context_db = c_db;
   cache = new ContextCache(c_db);
   discache = (DisassemblyCache *)0;
-}
-
-void Sleigh::fastReset()
-
-{
-  if (discache) {
-    discache->fastReset();
-  }
 }
 
 /// The .sla file from the document store is loaded and cache objects are prepared
@@ -810,3 +803,5 @@ void Sleigh::allowContextSet(bool val) const
 {
   cache->allowSet(val);
 }
+
+} // End namespace ghidra
