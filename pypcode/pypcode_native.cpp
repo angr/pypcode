@@ -20,6 +20,7 @@
 
 namespace nb = nanobind;
 using namespace nb::literals;
+using namespace ghidra;
 
 const char *
 #include "__version__.py"
