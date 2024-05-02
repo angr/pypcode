@@ -16,12 +16,12 @@
  */
 /* typedefs for getting specific word sizes */
 
-#ifndef __MYTYPES__
-#define __MYTYPES__
+#ifndef __TYPES_H__
+#define __TYPES_H__
 
-#ifndef CFFI_CDEF
 #include <cstdint>
-#endif
+
+namespace ghidra {
 
 // Use of uintm and intm is deprecated.  They must currently be set to be 32-bit.
 typedef uint32_t uintm;
@@ -43,13 +43,11 @@ typedef uintptr_t uintp;
 #define HOST_ENDIAN 0
 
 #else // other platforms (not compatible with g++ 4.8.5)
-#ifndef CFFI_CDEF
 class Endian {
 public:
   static constexpr const union { int4 whole; int1 part[4]; } host = { 1 };
 };
 #define HOST_ENDIAN Endian::host.part[3]
-#endif
 #endif
 
 #if defined(_WINDOWS)
@@ -97,5 +95,7 @@ CPUI_DEBUG        --    This is the ONE debug switch that should be passed in
 //# define MERGEMULTI_DEBUG
 //# define VARBANK_DEBUG
 #endif
+
+} // End namespace ghidra
 
 #endif

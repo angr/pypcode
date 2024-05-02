@@ -16,18 +16,12 @@
 /// \file loadimage.hh
 /// \brief Classes and API for accessing a binary load image
 
-#ifndef __CPUI_LOADIMAGE__
-#define __CPUI_LOADIMAGE__
+#ifndef __LOADIMAGE_HH__
+#define __LOADIMAGE_HH__
 
 #include "address.hh"
 
-// XXX: On Windows, LoadImage is defined as a macro which conflicts with name
-// of the class declared in this file. For now, just undefine the macro.
-#ifdef _WINDOWS
-#ifdef LoadImage
-#undef LoadImage
-#endif
-#endif
+namespace ghidra {
 
 /// \brief Exception indicating data was not available
 ///
@@ -232,4 +226,5 @@ inline void LoadImage::getReadonly(RangeList &list) const {
 /// \param size is the number of bytes to retrieve from the image
 /// \param addr is the starting address of the bytes to retrieve
 
+} // End namespace ghidra
 #endif
