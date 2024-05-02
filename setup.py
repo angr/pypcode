@@ -21,11 +21,13 @@ class BuildExtension(build_ext):
         except OSError as exc:
             raise RuntimeError("Please install CMake to build") from exc
 
-        # When building pypcode wheels on GitHub Actions using cibuildwheel, ARCHFLAGS will be set
         cross_compiling_for_macos_arm64 = (
             platform.system() == "Darwin" and platform.machine() == "x86_64" and "arm64" in os.getenv("ARCHFLAGS", "")
         )
-        cross_compiling = cross_compiling_for_macos_arm64
+        cross_compiling_for_macos_amd64 = (
+            platform.system() == "Darwin" and platform.machine() != "x86_64" and "x86_64" in os.getenv("ARCHFLAGS", "")
+        )
+        cross_compiling = cross_compiling_for_macos_arm64 or cross_compiling_for_macos_amd64
 
         root_dir = Path(__file__).parent.absolute()
         target_build_dir = root_dir / "build" / "native"
@@ -49,10 +51,10 @@ class BuildExtension(build_ext):
             cmake_build_args += ["--config", "Release"]
 
         target_cmake_config_args = cmake_config_args[::]
-        if cross_compiling_for_macos_arm64:
+        if cross_compiling:
             target_cmake_config_args += [
                 "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14",
-                "-DCMAKE_OSX_ARCHITECTURES=arm64",
+                "-DCMAKE_OSX_ARCHITECTURES=" + os.getenv("ARCHFLAGS"),
             ]
         subprocess.check_call(["cmake", "-S", ".", "-B", target_build_dir] + target_cmake_config_args, cwd=root_dir)
         subprocess.check_call(
