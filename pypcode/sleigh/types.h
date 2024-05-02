@@ -19,9 +19,7 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
-#ifndef CFFI_CDEF
 #include <cstdint>
-#endif
 
 namespace ghidra {
 
@@ -45,13 +43,11 @@ typedef uintptr_t uintp;
 #define HOST_ENDIAN 0
 
 #else // other platforms (not compatible with g++ 4.8.5)
-#ifndef CFFI_CDEF
 class Endian {
 public:
   static constexpr const union { int4 whole; int1 part[4]; } host = { 1 };
 };
 #define HOST_ENDIAN Endian::host.part[3]
-#endif
 #endif
 
 #if defined(_WINDOWS)
