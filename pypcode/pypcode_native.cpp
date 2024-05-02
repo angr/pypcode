@@ -247,7 +247,7 @@ public:
     DocumentStorage m_document_storage;
     Document *m_document;
     Element *m_tags;
-    unique_ptr<Sleigh> m_sleigh;
+    std::unique_ptr<Sleigh> m_sleigh;
 
     Context(const std::string &path)
     {
