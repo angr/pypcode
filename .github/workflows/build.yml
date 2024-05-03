@@ -94,17 +94,19 @@ jobs:
   upload_pypi:
     name: Upload wheels to PyPI
     needs: [lint, build_docs, build_sdist, build_wheels]
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pypcode
+    permissions:
+      id-token: write
     runs-on: ubuntu-latest
     # Upload to PyPI on every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           path: artifacts
       - run: |
           mkdir dist
           find artifacts -type f -exec mv {} dist \;
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+      - uses: pypa/gh-action-pypi-publish@v1.8.14
