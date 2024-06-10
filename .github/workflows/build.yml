@@ -56,7 +56,7 @@ jobs:
           - { arch: arm64,  wheel: cp312-macosx_arm64,     os: macos-latest   }
           - { arch: x86_64, wheel: cp312-macosx_x86_64,    os: macos-13       }
           - { arch: x86_64, wheel: cp312-manylinux_x86_64, os: ubuntu-latest  }
-          - { arch: x86_64, wheel: cp312-win_amd64,        os: windows-2019 }
+          - { arch: x86_64, wheel: cp312-win_amd64,        os: windows-latest }
     steps:
       - name: Download source distribution
         uses: actions/download-artifact@v4.1.7
