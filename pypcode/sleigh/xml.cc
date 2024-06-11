@@ -98,8 +98,6 @@
 
 #include <iostream>
 #include <string>
-#include <mutex>
-#include <thread>
 
 namespace ghidra {
 
@@ -191,8 +189,7 @@ extern int4 convertEntityRef(const string &ref);	///< Convert an XML entity to i
 extern int4 convertCharRef(const string &ref);	///< Convert an XML character reference to its equivalent character
 static XmlScan *global_scan;					///< Global reference to the scanner
 static ContentHandler *handler;					///< Global reference to the content handler
-static std::mutex global_scan_mutex;
-static std::mutex handler_mutex;
+
 
 
 
@@ -2384,8 +2381,6 @@ int4 xml_parse(istream &i,ContentHandler *hand,int4 dbg)
 #if YYDEBUG
   yydebug = dbg;
 #endif
-  std::lock_guard<std::mutex> global_scan_lock(global_scan_mutex);
-  std::lock_guard<std::mutex> handler_lock(handler_mutex);
   global_scan = new XmlScan(i);
   handler = hand;
   handler->startDocument();

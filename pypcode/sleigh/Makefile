@@ -38,21 +38,21 @@ endif
 CXX=g++ -std=c++11
 
 # Debug flags
-DBG_CXXFLAGS=-g -Wall -Wno-sign-compare $(CFLAGS)
+DBG_CXXFLAGS=-g -Wall -Wno-sign-compare
 #DBG_CXXFLAGS=-g -pg -Wall -Wno-sign-compare
 #DBG_CXXFLAGS=-g -fprofile-arcs -ftest-coverage -Wall -Wno-sign-compare
 
 # Optimization flags
-OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare $(CFLAGS)
+OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare
 
 YACC=bison
 
 # libraries
 #INCLUDES=-I$(BFDHOME)/include
 INCLUDES=
-BFDLIB=-lbfd -lz
+BFDLIB=-lbfd
 
-LNK=
+LNK=-lz
 
 # Source files
 ALL_SOURCE= $(wildcard *.cc)
@@ -80,14 +80,14 @@ CORE=	xml marshal space float address pcoderaw translate opcodes globalcontext
 # Additional core files for any projects that decompile
 DECCORE=capability architecture options graph cover block cast typeop database cpool \
 	comment stringmanage modelrules fspec action loadimage grammar varnode op \
-	type variable varmap jumptable emulate emulateutil flow userop \
+	type variable varmap jumptable emulate emulateutil flow userop multiprecision \
 	funcdata funcdata_block funcdata_op funcdata_varnode unionresolve pcodeinject \
 	heritage prefersplit rangeutil ruleaction subflow blockaction merge double \
 	transform coreaction condexe override dynamic crc32 prettyprint \
 	printlanguage printc printjava memstate opbehavior paramid signature $(COREEXT_NAMES)
 # Files used for any project that use the sleigh decoder
 SLEIGH=	sleigh pcodeparse pcodecompile sleighbase slghsymbol \
-	slghpatexpress slghpattern semantics context filemanage
+	slghpatexpress slghpattern semantics context slaformat compression filemanage
 # Additional files for the GHIDRA specific build
 GHIDRA=	ghidra_arch inject_ghidra ghidra_translate loadimage_ghidra \
 	typegrp_ghidra database_ghidra ghidra_context cpool_ghidra \
@@ -260,10 +260,10 @@ test: ghidra_test_dbg
 	./ghidra_test_dbg
 
 ghidra_dbg:	$(GHIDRA_DBG_OBJS)
-	$(CXX) $(DBG_CXXFLAGS) $(ADDITIONAL_FLAGS) $(MAKE_STATIC) $(ARCH_TYPE) -o ghidra_dbg $(GHIDRA_DBG_OBJS) $(LNK)
+	$(CXX) $(DBG_CXXFLAGS) $(ADDITIONAL_FLAGS) $(MAKE_STATIC) $(ARCH_TYPE) -o ghidra_dbg $(GHIDRA_DBG_OBJS)
 
 ghidra_opt:	$(GHIDRA_OPT_OBJS)
-	$(CXX) $(OPT_CXXFLAGS) $(ADDITIONAL_FLAGS) $(MAKE_STATIC) $(ARCH_TYPE)  -o ghidra_opt $(GHIDRA_OPT_OBJS) $(LNK)
+	$(CXX) $(OPT_CXXFLAGS) $(ADDITIONAL_FLAGS) $(MAKE_STATIC) $(ARCH_TYPE)  -o ghidra_opt $(GHIDRA_OPT_OBJS)
 
 sleigh_dbg:	$(SLEIGH_DBG_OBJS)
 	$(CXX) $(DBG_CXXFLAGS) $(ADDITIONAL_FLAGS) $(MAKE_STATIC) $(ARCH_TYPE) -o sleigh_dbg $(SLEIGH_DBG_OBJS) $(LNK)
@@ -411,6 +411,6 @@ reallyclean:	clean
 	rm -rf com_dbg com_opt test_dbg ghi_dbg ghi_opt sla_dbg sla_opt
 	rm -f $(EXECS) TAGS *~
 
-sleigh_src:
-	mkdir -p sleigh_src
-	cp $(LIBSLA_SOURCE) Makefile sleigh_src
+sleigh:
+	mkdir -p sleigh
+	cp $(LIBSLA_SOURCE) Makefile sleigh
