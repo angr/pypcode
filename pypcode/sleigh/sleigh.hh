@@ -119,6 +119,7 @@ public:
   DisassemblyCache(Translate *trans,ContextCache *ccache,AddrSpace *cspace,int4 cachesize,int4 windowsize);	///< Constructor
   ~DisassemblyCache(void) { free(); }	///< Destructor
   ParserContext *getParserContext(const Address &addr);		///< Get the parser for a particular Address
+  void fastReset();              ///< Reset parser states to uninitialized
 };
 
 /// \brief Build p-code from a pre-parsed instruction
@@ -174,6 +175,7 @@ public:
   Sleigh(LoadImage *ld,ContextDatabase *c_db);		///< Constructor
   virtual ~Sleigh(void);				///< Destructor
   void reset(LoadImage *ld,ContextDatabase *c_db);	///< Reset the engine for a new program
+  void fastReset();					///< Quickly reset the engine
   virtual void initialize(DocumentStorage &store);
   virtual void registerContext(const string &name,int4 sbit,int4 ebit);
   virtual void setContextDefault(const string &nm,uintm val);
