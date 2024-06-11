@@ -484,13 +484,6 @@ DisassemblyCache::DisassemblyCache(Translate *trans,ContextCache *ccache,AddrSpa
   initialize(cachesize,windowsize);		// Set default settings for the cache
 }
 
-void DisassemblyCache::fastReset(void)
-
-{
-  for(int4 i=0;i<minimumreuse;++i)
-    list[i]->setParserState(ParserContext::uninitialized);
-}
-
 /// Return a (possibly cached) ParserContext that is associated with \e addr
 /// If n different calls to this interface are made with n different Addresses, if
 ///    - n <= minimumreuse   AND
@@ -557,14 +550,6 @@ void Sleigh::reset(LoadImage *ld,ContextDatabase *c_db)
   discache = (DisassemblyCache *)0;
 }
 
-void Sleigh::fastReset()
-
-{
-  if (discache) {
-    discache->fastReset();
-  }
-}
-
 /// The .sla file from the document store is loaded and cache objects are prepared
 /// \param store is the document store containing the main \<sleigh> tag.
 void Sleigh::initialize(DocumentStorage &store)
@@ -574,7 +559,13 @@ void Sleigh::initialize(DocumentStorage &store)
     const Element *el = store.getTag("sleigh");
     if (el == (const Element *)0)
       throw LowlevelError("Could not find sleigh tag");
-    restoreXml(el);
+    sla::FormatDecode decoder(this);
+    ifstream s(el->getContent(), std::ios_base::binary);
+    if (!s)
+      throw LowlevelError("Could not open .sla file: " + el->getContent());
+    decoder.ingestStream(s);
+    s.close();
+    decode(decoder);
   }
   else
     reregisterContext();

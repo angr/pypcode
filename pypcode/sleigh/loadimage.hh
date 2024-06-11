@@ -23,14 +23,6 @@
 
 namespace ghidra {
 
-// XXX: On Windows, LoadImage is defined as a macro which conflicts with name
-// of the class declared in this file. For now, just undefine the macro.
-#ifdef _WINDOWS
-#ifdef LoadImage
-#undef LoadImage
-#endif
-#endif
-
 /// \brief Exception indicating data was not available
 ///
 /// This exception is thrown when a request for load image

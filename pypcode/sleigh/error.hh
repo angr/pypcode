@@ -75,8 +75,6 @@ struct LowlevelError {
   string explain;		///< Explanatory string
   /// Initialize the error with an explanatory string
   LowlevelError(const string &s) { explain = s; }
-
-  const char *what() { return explain.c_str(); }
 };
 
 /// \brief A generic recoverable error

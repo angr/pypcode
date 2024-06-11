@@ -297,7 +297,6 @@ public:
 struct DecoderError {
   string explain;		///< Explanatory string
   DecoderError(const string &s) { explain = s; }	///< Constructor
-  const char *what() { return explain.c_str(); }
 };
 
 /// \brief Start-up the XML parser given a stream and a handler
