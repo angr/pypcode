@@ -18,13 +18,26 @@ list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
 find_package(nanobind CONFIG REQUIRED)
 
 if(MSVC)
-  add_compile_options(/O2 /D_HAS_STD_BYTE=0)
+  add_compile_options(/O2 /D_HAS_STD_BYTE=0 /DLOCAL_ZLIB=1 /DNO_GZIP=1)
 else()
-  add_compile_options(-O3 -Wall -Wno-sign-compare -D__TERMINAL__)
+  add_compile_options(-O3 -Wall -Wno-sign-compare -D__TERMINAL__ -DLOCAL_ZLIB=1 -DNO_GZIP=1)
 endif()
+
+include_directories(pypcode/thirdparty)
+
+set(ZLIB
+  pypcode/zlib/adler32.c
+  pypcode/zlib/deflate.c
+  pypcode/zlib/inffast.c
+  pypcode/zlib/inflate.c
+  pypcode/zlib/inftrees.c
+  pypcode/zlib/trees.c
+  pypcode/zlib/zutil.c
+  )
 
 set(SLEIGH_COMMON
   pypcode/sleigh/address.cc
+  pypcode/sleigh/compression.cc
   pypcode/sleigh/context.cc
   pypcode/sleigh/float.cc
   pypcode/sleigh/globalcontext.cc
@@ -34,6 +47,7 @@ set(SLEIGH_COMMON
   pypcode/sleigh/pcodeparse.cc
   pypcode/sleigh/pcoderaw.cc
   pypcode/sleigh/semantics.cc
+  pypcode/sleigh/slaformat.cc
   pypcode/sleigh/sleigh.cc
   pypcode/sleigh/sleighbase.cc
   pypcode/sleigh/slghpatexpress.cc
@@ -50,11 +64,13 @@ add_executable(sleigh
   pypcode/sleigh/slghparse.cc
   pypcode/sleigh/slghscan.cc
   ${SLEIGH_COMMON}
+  ${ZLIB}
   )
 install(TARGETS sleigh DESTINATION bin)
 
 nanobind_add_module(pypcode_native
   pypcode/pypcode_native.cpp
   ${SLEIGH_COMMON}
+  ${ZLIB}
   )
 install(TARGETS pypcode_native DESTINATION .)
