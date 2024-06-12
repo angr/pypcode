@@ -11,7 +11,7 @@ from pypcode import (
     ArchLanguage,
     BadDataError,
     Context,
-    DecoderError,
+    LowlevelError,
     OpCode,
     PcodeOp,
     TranslateFlags,
@@ -56,7 +56,7 @@ class ContextTests(TestCase):
     def test_context_creation_failure(self):
         lang = ArchLanguage.from_id("x86:LE:64:default")
         bad_lang = ArchLanguage("/bad/arch/path", lang.ldef)
-        with self.assertRaises(DecoderError):
+        with self.assertRaises(LowlevelError):
             Context(bad_lang)
 
     def test_context_premature_release(self):
