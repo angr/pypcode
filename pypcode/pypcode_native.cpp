@@ -258,7 +258,8 @@ public:
         ElementId::initialize();
 
         LOG("%p Loading slafile...", this);
-        m_document = m_document_storage.openDocument(path);
+        istringstream sleighfilename(path);
+        m_document = m_document_storage.parseDocument(sleighfilename);
         m_tags = m_document->getRoot();
         m_document_storage.registerTag(m_tags);
 
