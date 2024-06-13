@@ -13,6 +13,7 @@ Table of Contents
    :maxdepth: 2
 
    Guide <guide>
+   Architecture Support <languages>
    API Reference <api>
 
 Indices and Tables
