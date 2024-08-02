@@ -74,6 +74,7 @@ jobs:
           CIBW_BUILD: ${{ matrix.wheel }}
           CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
           CIBW_BUILD_VERBOSITY: 1
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.arch == 'arm64' && '11' || '10.14' }}
       - uses: actions/upload-artifact@v4.3.5
         with:
           name: ${{ matrix.wheel }}
