@@ -10,8 +10,8 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.4
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-python@v5.1.1
         with:
           python-version: '3.10'
       - run: |
@@ -25,15 +25,15 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.4
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-python@v5.1.1
         with:
           python-version: '3.10'
       - name: Build sdist
         run: |
           python -m pip install --user build
           python -m build --sdist
-      - uses: actions/upload-artifact@v4.3.3
+      - uses: actions/upload-artifact@v4.3.5
         with:
           name: source
           path: dist/*.tar.gz
@@ -59,14 +59,14 @@ jobs:
           - { arch: x86_64, wheel: cp312-win_amd64,        os: windows-2019 }
     steps:
       - name: Download source distribution
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
           name: source
       - name: Unpack source distribution
         shell: bash
         run: tar --strip-components 1 -xvf *.tar.gz
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.17.0
+        uses: pypa/cibuildwheel@v2.19.2
         with:
           output-dir: wheelhouse
         env:
@@ -74,7 +74,7 @@ jobs:
           CIBW_BUILD: ${{ matrix.wheel }}
           CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
           CIBW_BUILD_VERBOSITY: 1
-      - uses: actions/upload-artifact@v4.3.3
+      - uses: actions/upload-artifact@v4.3.5
         with:
           name: ${{ matrix.wheel }}
           path: ./wheelhouse/*.whl
@@ -83,8 +83,8 @@ jobs:
     name: Build docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.4
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-python@v5.1.1
         with:
           python-version: '3.12'
       - run: |
@@ -103,10 +103,10 @@ jobs:
     # Upload to PyPI on every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4.1.8
         with:
           path: artifacts
       - run: |
           mkdir dist
           find artifacts -type f -exec mv {} dist \;
-      - uses: pypa/gh-action-pypi-publish@v1.8.14
+      - uses: pypa/gh-action-pypi-publish@v1.9.0
