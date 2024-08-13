@@ -434,6 +434,18 @@ NB_MODULE(pypcode_native, m)
             [](VarnodeData &a) { return a.space->getTrans()->getRegisterName(a.space, a.offset, a.size); },
             "Return the register name if this Varnode references a register, otherwise return the empty string.")
         .def(
+            "getUserDefinedOpName",
+            [](VarnodeData &a) {
+                vector<string> userops;
+                a.space->getTrans()->getUserOpNames(userops);
+                if(a.offset>=userops.size())
+                {
+                    throw std::out_of_range("index out of range");
+                }
+                return userops[a.offset];
+            },
+            "Get the name of a user defined operation.")
+        .def(
             "getSpaceFromConst",
             [](VarnodeData &a) { return a.getSpaceFromConst(); },
             nb::rv_policy::reference_internal,

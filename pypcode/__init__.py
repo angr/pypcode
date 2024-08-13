@@ -317,6 +317,9 @@ class OpFormatSpecial(OpFormat):
     def fmt_CALLIND(self, op: PcodeOp) -> str:
         return f"call [{self.fmt_vn(op.inputs[0])}]"
 
+    def fmt_CALLOTHER(self, op: PcodeOp) -> str:
+        return f'{op.inputs[0].getUserDefinedOpName()}({", ".join(self.fmt_vn(i) for i in op.inputs[1:])})'
+
     def fmt_CBRANCH(self, op: PcodeOp) -> str:
         return f"if ({self.fmt_vn(op.inputs[1])}) goto {self.fmt_vn(op.inputs[0])}"
 
@@ -335,6 +338,7 @@ class OpFormatSpecial(OpFormat):
             OpCode.BRANCHIND: self.fmt_BRANCHIND,
             OpCode.CALL: self.fmt_CALL,
             OpCode.CALLIND: self.fmt_CALLIND,
+            OpCode.CALLOTHER: self.fmt_CALLOTHER,
             OpCode.CBRANCH: self.fmt_CBRANCH,
             OpCode.LOAD: self.fmt_LOAD,
             OpCode.RETURN: self.fmt_RETURN,
@@ -358,6 +362,7 @@ class PcodePrettyPrinter:
         OpCode.BRANCHIND: OpFormatSpecial(),
         OpCode.CALL: OpFormatSpecial(),
         OpCode.CALLIND: OpFormatSpecial(),
+        OpCode.CALLOTHER: OpFormatSpecial(),
         OpCode.CBRANCH: OpFormatSpecial(),
         OpCode.COPY: OpFormatUnary(""),
         OpCode.CPOOLREF: OpFormatFunc("cpool"),
