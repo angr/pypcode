@@ -9,7 +9,7 @@ repos:
 #
 
 -   repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.18
+    rev: v0.19
     hooks:
     - id: validate-pyproject
       fail_fast: true
@@ -71,7 +71,7 @@ repos:
 
 # Last modifier: Coding Standard
 -   repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 24.8.0
     hooks:
     -   id: black
 
@@ -105,12 +105,12 @@ repos:
     -   id: check-docstring-first
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.5
+    rev: v0.6.2
     hooks:
     -   id: ruff
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.0
+    rev: v1.11.2
     hooks:
     -   id: mypy
 
