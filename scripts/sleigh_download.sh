@@ -2,7 +2,7 @@
 set -e
 set -x
 
-git clone --depth=1 -b Ghidra_11.1.2_build https://github.com/NationalSecurityAgency/ghidra.git ghidra_src
+git clone --depth=1 -b Ghidra_11.2.1_build https://github.com/NationalSecurityAgency/ghidra.git ghidra_src
 
 # We just need Makefile and $(LIBSLA_SOURCE) defined inside Makefile. Do it this
 # way to make sure we stay up to date with the list of required files.

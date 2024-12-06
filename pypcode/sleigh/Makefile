@@ -38,12 +38,12 @@ endif
 CXX=g++ -std=c++11
 
 # Debug flags
-DBG_CXXFLAGS=-g -Wall -Wno-sign-compare $(CFLAGS)
+DBG_CXXFLAGS=-g -Wall -Wno-sign-compare
 #DBG_CXXFLAGS=-g -pg -Wall -Wno-sign-compare
 #DBG_CXXFLAGS=-g -fprofile-arcs -ftest-coverage -Wall -Wno-sign-compare
 
 # Optimization flags
-OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare $(CFLAGS)
+OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare
 
 YACC=bison
 
@@ -83,7 +83,7 @@ DECCORE=capability architecture options graph cover block cast typeop database c
 	type variable varmap jumptable emulate emulateutil flow userop multiprecision \
 	funcdata funcdata_block funcdata_op funcdata_varnode unionresolve pcodeinject \
 	heritage prefersplit rangeutil ruleaction subflow blockaction merge double \
-	transform coreaction condexe override dynamic crc32 prettyprint \
+	transform constseq coreaction condexe override dynamic crc32 prettyprint \
 	printlanguage printc printjava memstate opbehavior paramid signature $(COREEXT_NAMES)
 # Files used for any project that use the sleigh decoder
 SLEIGH=	sleigh pcodeparse pcodecompile sleighbase slghsymbol \
@@ -411,6 +411,6 @@ reallyclean:	clean
 	rm -rf com_dbg com_opt test_dbg ghi_dbg ghi_opt sla_dbg sla_opt
 	rm -f $(EXECS) TAGS *~
 
-sleigh_src:
-	mkdir -p sleigh_src
-	cp $(LIBSLA_SOURCE) Makefile sleigh_src
+sleigh:
+	mkdir -p sleigh
+	cp $(LIBSLA_SOURCE) Makefile sleigh
