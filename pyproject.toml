@@ -11,3 +11,6 @@ line-length = 120
 extend-ignore = [
 	"E402", # Bottom imports
 ]
+exclude = [
+	"pypcode/processors"
+]
