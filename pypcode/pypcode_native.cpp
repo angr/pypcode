@@ -438,8 +438,7 @@ NB_MODULE(pypcode_native, m)
             [](VarnodeData &a) {
                 vector<string> userops;
                 a.space->getTrans()->getUserOpNames(userops);
-                if(a.offset>=userops.size())
-                {
+                if (a.offset >= userops.size()) {
                     throw std::out_of_range("index out of range");
                 }
                 return userops[a.offset];
