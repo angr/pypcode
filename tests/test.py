@@ -150,6 +150,7 @@ class VarnodeTests(TestCase):
         assert tx.ops[1].inputs[1].getRegisterName() == "x30"
         assert tx.ops[1].inputs[2].getRegisterName() == "sp"
 
+
 class DisassembleTests(TestCase):
     """
     Context::disassemble tests
