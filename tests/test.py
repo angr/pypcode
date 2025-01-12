@@ -136,6 +136,19 @@ class VarnodeTests(TestCase):
         assert tx.ops[1].inputs[0].getRegisterName() == "RCX"
         assert tx.ops[1].inputs[1].getRegisterName() == ""
 
+    def test_getUserDefinedOpName(self):
+        ctx = Context("AARCH64:LE:64:AppleSilicon")
+        ctx.setVariableDefault("ShowPAC", 1)
+        ctx.setVariableDefault("PAC_clobber", 1)
+
+        tx = ctx.translate(b"\x7f\x23\x03\xd5")  # pacibsp
+
+        # x30 = pacib(x30, sp)
+        assert tx.ops[1].opcode == OpCode.CALLOTHER
+        assert tx.ops[1].output.getRegisterName() == "x30"
+        assert tx.ops[1].inputs[0].getUserDefinedOpName() == "pacib"
+        assert tx.ops[1].inputs[1].getRegisterName() == "x30"
+        assert tx.ops[1].inputs[2].getRegisterName() == "sp"
 
 class DisassembleTests(TestCase):
     """
