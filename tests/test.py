@@ -127,12 +127,12 @@ class VarnodeTests(TestCase):
 
     def test_getSpaceFromConst(self):
         ctx = Context("x86:LE:64:default")
-        tx = ctx.translate(b"\x48\x8B\x41\x01")  # mov rax, [rcx + 1]
+        tx = ctx.translate(b"\x48\x8b\x41\x01")  # mov rax, [rcx + 1]
         assert tx.ops[2].inputs[0].getSpaceFromConst().name == "ram"
 
     def test_getRegisterName(self):
         ctx = Context("x86:LE:64:default")
-        tx = ctx.translate(b"\x48\x8B\x41\x01")  # mov rax, [rcx + 1]
+        tx = ctx.translate(b"\x48\x8b\x41\x01")  # mov rax, [rcx + 1]
         assert tx.ops[1].inputs[0].getRegisterName() == "RCX"
         assert tx.ops[1].inputs[1].getRegisterName() == ""
 
