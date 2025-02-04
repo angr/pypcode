@@ -45,18 +45,21 @@ jobs:
     strategy:
       matrix:
         include:
-          - { arch: arm64,  wheel: cp310-macosx_arm64,     os: macos-latest   }
-          - { arch: x86_64, wheel: cp310-macosx_x86_64,    os: macos-13       }
-          - { arch: x86_64, wheel: cp310-manylinux_x86_64, os: ubuntu-latest  }
-          - { arch: x86_64, wheel: cp310-win_amd64,        os: windows-2019 }
-          - { arch: arm64,  wheel: cp311-macosx_arm64,     os: macos-latest   }
-          - { arch: x86_64, wheel: cp311-macosx_x86_64,    os: macos-13       }
-          - { arch: x86_64, wheel: cp311-manylinux_x86_64, os: ubuntu-latest  }
-          - { arch: x86_64, wheel: cp311-win_amd64,        os: windows-2019 }
-          - { arch: arm64,  wheel: cp312-macosx_arm64,     os: macos-latest   }
-          - { arch: x86_64, wheel: cp312-macosx_x86_64,    os: macos-13       }
-          - { arch: x86_64, wheel: cp312-manylinux_x86_64, os: ubuntu-latest  }
-          - { arch: x86_64, wheel: cp312-win_amd64,        os: windows-2019 }
+          - { arch: arm64,    wheel: cp310-macosx_arm64,      os: macos-latest     }
+          - { arch: x86_64,   wheel: cp310-macosx_x86_64,     os: macos-13         }
+          - { arch: x86_64,   wheel: cp310-manylinux_x86_64,  os: ubuntu-latest    }
+          - { arch: aarcrh64, wheel: cp310-manylinux_aarch64, os: ubuntu-24.04-arm }
+          - { arch: x86_64,   wheel: cp310-win_amd64,         os: windows-2019     }
+          - { arch: arm64,    wheel: cp311-macosx_arm64,      os: macos-latest     }
+          - { arch: x86_64,   wheel: cp311-macosx_x86_64,     os: macos-13         }
+          - { arch: x86_64,   wheel: cp311-manylinux_x86_64,  os: ubuntu-latest    }
+          - { arch: aarch64,  wheel: cp311-manylinux_aarch64, os: ubuntu-24.04-arm }
+          - { arch: x86_64,   wheel: cp311-win_amd64,         os: windows-2019     }
+          - { arch: arm64,    wheel: cp312-macosx_arm64,      os: macos-latest     }
+          - { arch: x86_64,   wheel: cp312-macosx_x86_64,     os: macos-13         }
+          - { arch: x86_64,   wheel: cp312-manylinux_x86_64,  os: ubuntu-latest    }
+          - { arch: aarch64,  wheel: cp312-manylinux_aarch64, os: ubuntu-24.04-arm }
+          - { arch: x86_64,   wheel: cp312-win_amd64,         os: windows-2019     }
     steps:
       - name: Download source distribution
         uses: actions/download-artifact@v4.1.8
