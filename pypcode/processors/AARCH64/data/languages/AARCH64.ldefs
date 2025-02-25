@@ -15,7 +15,9 @@
     <compiler name="golang" spec="AARCH64_golang.cspec" id="golang"/>
     <external_name tool="gnu" name="aarch64"/>
     <external_name tool="DWARF.register.mapping.file" name="AARCH64.dwarf"/>
+    <external_name tool="Golang.register.info.file" name="AARCH64_golang.register.info"/>
     <external_name tool="qemu" name="qemu-aarch64"/>
+    <external_name tool="qemu_system" name="qemu-system-aarch64"/>
   </language>
   <language processor="AARCH64"
             endian="big"
@@ -34,6 +36,7 @@
     <external_name tool="DWARF.register.mapping.file" name="AARCH64.dwarf"/>
     <external_name tool="Golang.register.info.file" name="AARCH64_golang.register.info"/>
     <external_name tool="qemu" name="qemu-aarch64_be"/>
+    <external_name tool="qemu_system" name="qemu-system-aarch64"/>
   </language>
   <language processor="AARCH64"
             endian="little"
@@ -51,6 +54,7 @@
     <external_name tool="gnu" name="aarch64:ilp32"/>
     <external_name tool="DWARF.register.mapping.file" name="AARCH64.dwarf"/>
     <external_name tool="qemu" name="qemu-aarch64"/>
+    <external_name tool="qemu_system" name="qemu-system-aarch64"/>
   </language>
   <language processor="AARCH64"
             endian="big"
@@ -69,5 +73,6 @@
     <external_name tool="gnu" name="aarch64:ilp32"/>
     <external_name tool="DWARF.register.mapping.file" name="AARCH64.dwarf"/>
     <external_name tool="qemu" name="qemu-aarch64_be"/>
+    <external_name tool="qemu_system" name="qemu-system-aarch64"/>
   </language>
 </language_definitions>
