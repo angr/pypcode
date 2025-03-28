@@ -10,14 +10,14 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
-      - uses: actions/setup-python@v5.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
           python-version: '3.10'
       - run: |
           python -m pip install pylint
           python -m pip install -e .
-      - uses: pre-commit/action@v3.0.1
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         with:
           extra_args: pylint --all-files
 
@@ -25,15 +25,15 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
-      - uses: actions/setup-python@v5.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
           python-version: '3.10'
       - name: Build sdist
         run: |
           python -m pip install --user build
           python -m build --sdist
-      - uses: actions/upload-artifact@v4.3.5
+      - uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: source
           path: dist/*.tar.gz
@@ -62,14 +62,14 @@ jobs:
           - { arch: x86_64,   wheel: cp312-win_amd64,         os: windows-2019     }
     steps:
       - name: Download source distribution
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: source
       - name: Unpack source distribution
         shell: bash
         run: tar --strip-components 1 -xvf *.tar.gz
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.19.2
+        uses: pypa/cibuildwheel@7e5a838a63ac8128d71ab2dfd99e4634dd1bca09 # v2.19.2
         with:
           output-dir: wheelhouse
         env:
@@ -78,7 +78,7 @@ jobs:
           CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
           CIBW_BUILD_VERBOSITY: 1
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.arch == 'arm64' && '11' || '10.14' }}
-      - uses: actions/upload-artifact@v4.3.5
+      - uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: ${{ matrix.wheel }}
           path: ./wheelhouse/*.whl
@@ -87,8 +87,8 @@ jobs:
     name: Build docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
-      - uses: actions/setup-python@v5.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
           python-version: '3.12'
       - run: |
@@ -107,10 +107,10 @@ jobs:
     # Upload to PyPI on every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/download-artifact@v4.1.8
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           path: artifacts
       - run: |
           mkdir dist
           find artifacts -type f -exec mv {} dist \;
-      - uses: pypa/gh-action-pypi-publish@v1.9.0
+      - uses: pypa/gh-action-pypi-publish@ec4db0b4ddc65acdf4bff5fa45ac92d78b56bdf0 # v1.9.0
