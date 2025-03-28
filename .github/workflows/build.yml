@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: tar --strip-components 1 -xvf *.tar.gz
       - name: Build wheel
-        uses: pypa/cibuildwheel@7e5a838a63ac8128d71ab2dfd99e4634dd1bca09 # v2.19.2
+        uses: pypa/cibuildwheel@d04cacbc9866d432033b1d09142936e6a0e2121a # v2.23.2
         with:
           output-dir: wheelhouse
         env:
