@@ -1,6 +1,43 @@
+[project]
+name = "pypcode"
+description = "Machine code disassembly and IR translation library"
+license = { file = "LICENSE.txt" }
+readme = { file = "README.md", content-type = "text/markdown" }
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.10"
+dynamic = [ "version" ]
+
+[project.urls]
+Homepage = "https://api.angr.io/projects/pypcode/en/latest/"
+Repository = "https://github.com/angr/pypcode"
+
+[project.optional-dependencies]
+docs = [
+    "furo",
+    "ipython",
+    "myst-parser",
+    "sphinx",
+    "sphinx-autodoc-typehints",
+]
+
 [build-system]
-requires = ["setuptools", "nanobind", "cmake"]
+requires = [ "setuptools", "nanobind", "cmake" ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+dynamic = { version = { attr = "pypcode.__version__.__version__" } }
+packages = [ "pypcode" ]
+ext-modules = [
+  { name = "pypcode.pypcode_native", sources = [] }
+]
 
 [tool.black]
 line-length = 120

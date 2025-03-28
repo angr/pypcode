@@ -6,7 +6,7 @@ import shutil
 import struct
 import subprocess
 import sys
-from setuptools import setup, Extension
+from setuptools import setup
 from setuptools.command.build_ext import build_ext
 
 
@@ -96,7 +96,6 @@ def add_pkg_data_dirs(pkg, dirs):
 
 
 setup(
-    ext_modules=[Extension(name="pypcode_native", sources=[])],
     package_data={
         "pypcode": add_pkg_data_dirs("pypcode", ["bin", "docs", "processors"]) + ["py.typed", "pypcode_native.pyi"]
     },
