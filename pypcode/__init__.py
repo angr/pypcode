@@ -31,9 +31,7 @@ from .pypcode_native import (  # pylint:disable=no-name-in-module
 )
 
 from .pypcode_native import Context as _Context  # pylint:disable=no-name-in-module
-from .cspec import CompilerSpec
-from .pspec import ProcessorSpec
-from .ldefs import LanguageDefinitions, Language
+
 
 __all__ = [
     "Address",
@@ -41,7 +39,6 @@ __all__ = [
     "Arch",
     "ArchLanguage",
     "BadDataError",
-    "CompilerSpec",
     "Context",
     "DecoderError",
     "Disassembly",
@@ -55,7 +52,6 @@ __all__ = [
     "OpFormatUnary",
     "PcodeOp",
     "PcodePrettyPrinter",
-    "ProcessorSpec",
     "TranslateFlags",
     "Translation",
     "UnimplError",
@@ -88,60 +84,62 @@ class ArchLanguage:
     )
 
     archdir: str
-    ldef: Language
+    ldef: ET.Element
 
-    def __init__(self, archdir: str, ldef: Language):
+    def __init__(self, archdir: str, ldef: ET.Element):
         self.archdir = archdir
         self.ldef = ldef
-        self._pspec: Optional[ProcessorSpec] = None
-        self._cspecs: Optional[Dict[Tuple[str, str], CompilerSpec]] = None
+        self._pspec: Optional[ET.Element] = None
+        self._cspecs: Optional[Dict[Tuple[str, str], ET.Element]] = None
 
     @property
     def pspec_path(self) -> str:
-        return os.path.join(self.archdir, self.ldef.processorspec)
+        return os.path.join(self.archdir, self.processorspec)
 
     @property
     def slafile_path(self) -> str:
-        return os.path.join(self.archdir, self.ldef.slafile)
+        return os.path.join(self.archdir, self.slafile)
 
     @property
     def description(self) -> str:
-        return self.ldef.description or ""
+        elem = self.ldef.find("description")
+        if elem is not None:
+            return elem.text or ""
+        return ""
 
     def __getattr__(self, key):
-        return getattr(self.ldef, key)
+        if key in self.ldef.attrib:
+            return self.ldef.attrib[key]
+        raise AttributeError(key)
 
     @property
-    def pspec(self) -> Optional[ProcessorSpec]:
+    def pspec(self) -> Optional[ET.Element]:
         if self._pspec is None:
-            root = ET.parse(self.pspec_path).getroot()
-            self._pspec = ProcessorSpec.from_element(root)
+            self._pspec = ET.parse(self.pspec_path).getroot()
         return self._pspec
 
     @property
-    def cspecs(self) -> Mapping[Tuple[str, str], CompilerSpec]:
+    def cspecs(self) -> Mapping[Tuple[str, str], ET.Element]:
         if self._cspecs is None:
             self._cspecs = {}
-            for e in self.ldef.compilers:
-                path = os.path.join(self.archdir, e.spec)
-                root = ET.parse(path).getroot()
-                cspec = CompilerSpec.from_element(root)
-                self._cspecs[(e.id, e.name)] = cspec
+            for e in self.ldef.findall("compiler"):
+                path = os.path.join(self.archdir, e.attrib["spec"])
+                cspec = ET.parse(path).getroot()
+                self._cspecs[(e.attrib["id"], e.attrib["name"])] = cspec
         return self._cspecs
 
     def init_context_from_pspec(self, ctx: "Context") -> None:
         if self.pspec is None:
             return
-
-        if self.pspec.context_data is None:
+        cd = self.pspec.find("context_data")
+        if cd is None:
             return
-
-        context_set = self.pspec.context_data.context_set
-        if context_set is None:
+        cs = cd.find("context_set")
+        if cs is None:
             return
-
-        for name, value in context_set.values.items():
-            ctx.setVariableDefault(name, value)
+        for e in cs:
+            assert e.tag == "set"
+            ctx.setVariableDefault(e.attrib["name"], int(e.attrib["val"]))
 
     @classmethod
     def from_id(cls, langid: str) -> Optional["ArchLanguage"]:
@@ -171,7 +169,7 @@ class Arch:
     archpath: str
     archname: str
     ldefpath: str
-    ldef: LanguageDefinitions
+    ldef: ET.ElementTree
     languages: Sequence[ArchLanguage]
 
     def __init__(self, name: str, ldefpath: str):
@@ -184,13 +182,8 @@ class Arch:
         self.archpath = os.path.dirname(ldefpath)
         self.archname = name
         self.ldefpath = ldefpath
-
-        # Parse ldefs file into structured format
-        with open(ldefpath, encoding="utf8") as f:
-            self.ldef = LanguageDefinitions.from_xml(f.read())
-
-        # Create ArchLanguage objects from structured data
-        self.languages = [ArchLanguage(self.archpath, lang) for lang in self.ldef.languages]
+        self.ldef = ET.parse(ldefpath)
+        self.languages = [ArchLanguage(self.archpath, e) for e in self.ldef.getroot()]
 
     @classmethod
     def enumerate(cls) -> Generator["Arch", None, None]:
