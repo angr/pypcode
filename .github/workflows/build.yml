@@ -46,7 +46,7 @@ jobs:
       matrix:
         py: [cp310, cp311, cp312, cp313]
         platform:
-          - { arch: x86_64,  os: windows-2019,     wheel_tag: win_amd64         }
+          - { arch: x86_64,  os: windows-latest,   wheel_tag: win_amd64         }
           - { arch: x86_64,  os: macos-13,         wheel_tag: macosx_x86_64     }
           - { arch: arm64,   os: macos-latest,     wheel_tag: macosx_arm64      }
           - { arch: x86_64,  os: ubuntu-latest,    wheel_tag: manylinux_x86_64  }
