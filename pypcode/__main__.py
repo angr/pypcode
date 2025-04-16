@@ -91,8 +91,7 @@ def main():
                 disas_offset = disas_addr - base
                 disas_len = sum(vn.size for vn in op.inputs)
                 disas_slice = code[disas_offset : disas_offset + disas_len]
-                for insn in ctx.disassemble(disas_slice, disas_addr).instructions:
-                    print(f"{insn.addr.offset:#x}/{insn.length}: {insn.mnem} {insn.body}")
+                print(ctx.disassemble(disas_slice, disas_addr))
             else:
                 print(f" {i - last_imark_idx - 1:3d}: {op}")
         print("")
