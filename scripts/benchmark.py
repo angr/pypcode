@@ -108,7 +108,7 @@ def get_blocks(binary_path: str) -> List[Block]:
         cfg = p.analyses[angr.analyses.CFGFast].prep(show_progressbar=True)(
             resolve_indirect_jumps=False, force_smart_scan=False
         )
-        for n in cast(Iterable[angr.analyses.cfg.CFGNode], cfg.model.nodes()):
+        for n in cast(Iterable[angr.knowledge_plugins.cfg.cfg_model.CFGNode], cfg.model.nodes()):
             if n.byte_string:
                 blocks.append(Block(n.addr, n.byte_string))
         log.info("Saving blocks to file '%s' for subsequent benchmarks...", blocks_file_path)
