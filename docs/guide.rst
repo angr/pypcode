@@ -19,23 +19,40 @@ The very latest development version can be installed from GitHub via:
 Usage Example
 -------------
 
-Disassemble:
+Disassemble with :meth:`pypcode.Context.disassemble`:
 
 .. ipython::
 
    In [0]: from pypcode import Context
       ...: ctx = Context("x86:LE:64:default")
-      ...: dx = ctx.disassemble(b"\x48\x35\x78\x56\x34\x12\xc3")
+      ...: dx = ctx.disassemble(bytes.fromhex("483578563412c3"))
       ...: print(dx)
 
-Translate to P-Code:
+Work with :class:`pypcode.Disassembly` and :class:`pypcode.Instruction`:
+
+.. ipython::
+
+   In [0]: (dx.instructions[0].mnem, dx.instructions[0].body)
+
+Translate to P-Code with :meth:`pypcode.Context.translate`:
 
 .. ipython::
 
    In [0]: from pypcode import Context
       ...: ctx = Context("x86:LE:64:default")
-      ...: tx = ctx.translate(b"\x48\x35\x78\x56\x34\x12\xc3")
+      ...: tx = ctx.translate(bytes.fromhex("483578563412c3"))
       ...: print(tx)
+
+Work with :class:`pypcode.Translation` and :class:`pypcode.PcodeOp`:
+
+.. ipython::
+
+   In [0]: tx.ops[3].opcode
+
+   In [0]: tx.ops[3].inputs[0].space.name
+
+   In [0]: tx.ops[3].inputs[0].getRegisterName()
+
 
 Command Line Usage Example
 --------------------------
