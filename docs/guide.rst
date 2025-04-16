@@ -26,8 +26,7 @@ Disassemble:
    In [0]: from pypcode import Context
       ...: ctx = Context("x86:LE:64:default")
       ...: dx = ctx.disassemble(b"\x48\x35\x78\x56\x34\x12\xc3")
-      ...: for ins in dx.instructions:
-      ...:     print(f"{ins.addr.offset:#x}/{ins.length}: {ins.mnem} {ins.body}")
+      ...: print(dx)
 
 Translate to P-Code:
 
@@ -36,8 +35,7 @@ Translate to P-Code:
    In [0]: from pypcode import Context
       ...: ctx = Context("x86:LE:64:default")
       ...: tx = ctx.translate(b"\x48\x35\x78\x56\x34\x12\xc3")
-      ...: for op in tx.ops:
-      ...:     print(op)
+      ...: print(tx)
 
 Command Line Usage Example
 --------------------------
