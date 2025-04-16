@@ -667,22 +667,21 @@ NB_MODULE(pypcode_native, m)
                In [0]: import pypcode
                   ...: ctx = pypcode.Context("x86:LE:64:default")
                   ...: tx = ctx.translate(b"\x48\x35\x78\x56\x34\x12\xc3")  # xor rax, 0x12345678; ret
-                  ...: for op in tx.ops:
-                  ...:     print(pypcode.PcodePrettyPrinter.fmt_op(op))
-                  IMARK ram[0:6]
-                  CF = 0x0
-                  OF = 0x0
-                  RAX = RAX ^ 0x12345678
-                  SF = RAX s< 0x0
-                  ZF = RAX == 0x0
-                  unique[13180:8] = RAX & 0xff
-                  unique[13200:1] = popcount(unique[13180:8])
-                  unique[13280:1] = unique[13200:1] & 0x1
-                  PF = unique[13280:1] == 0x0
-                  IMARK ram[6:1]
-                  RIP = *[ram]RSP
-                  RSP = RSP + 0x8
-                  return RIP
+                  ...: print(tx)
+               IMARK ram[0:6]
+               CF = 0x0
+               OF = 0x0
+               RAX = RAX ^ 0x12345678
+               SF = RAX s< 0x0
+               ZF = RAX == 0x0
+               unique[28080:8] = RAX & 0xff
+               unique[28100:1] = popcount(unique[28080:8])
+               unique[28180:1] = unique[28100:1] & 0x1
+               PF = unique[28180:1] == 0x0
+               IMARK ram[6:1]
+               RIP = *[ram]RSP
+               RSP = RSP + 0x8
+               return RIP
 
             Instructions are decoded from ``buf`` and translated to a sequence of :class:`.PcodeOp` s until:
               * the end of the buffer is reached,
