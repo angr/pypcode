@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Pythonic interface to SLEIGH
 """
