@@ -202,6 +202,12 @@ class DisassembleTests(TestCase):
         dx = ctx.disassemble(b"\x90\xeb\xfe", max_instructions=1)
         assert len(dx.instructions) == 1
 
+    def test_pretty_printing(self):
+        ctx = Context("x86:LE:64:default")
+        dx = ctx.disassemble(b"\x48\x31\xc0\xc3")
+        assert "0x0/3: XOR RAX,RAX" in str(dx)
+        assert "0x3/1: RET" in str(dx)
+
 
 class TranslateTests(TestCase):
     """
