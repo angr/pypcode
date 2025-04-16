@@ -211,8 +211,8 @@ def fmt_disassembly(dx: Disassembly) -> str:
 
 
 # Monkey patch print handlers
-Disassembly.__str__ = fmt_disassembly
-Instruction.__str__ = fmt_instruction
-PcodeOp.__str__ = PcodePrettyPrinter.fmt_op
-Translation.__str__ = PcodePrettyPrinter.fmt_translation
-Varnode.__str__ = OpFormat.fmt_vn
+Disassembly.__str__ = fmt_disassembly  # type: ignore[assignment,method-assign]
+Instruction.__str__ = fmt_instruction  # type: ignore[assignment,method-assign]
+PcodeOp.__str__ = PcodePrettyPrinter.fmt_op  # type: ignore[assignment,method-assign]
+Translation.__str__ = PcodePrettyPrinter.fmt_translation  # type: ignore[assignment,method-assign]
+Varnode.__str__ = OpFormat.fmt_vn  # type: ignore[assignment,method-assign]
