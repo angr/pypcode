@@ -27,10 +27,8 @@ def get_imarks(translation: Translation) -> List[PcodeOp]:
     return [op for op in translation.ops if op.opcode == OpCode.IMARK]
 
 
-# from pypcode import PcodePrettyPrinter
 # def pp_tx(translation: Translation) -> None:
-#     for op in translation.ops:
-#         log.debug("%s", PcodePrettyPrinter.fmt_op(op))
+#     log.debug("%s", translation)
 
 
 # def pp_dx(disassembly) -> None:
@@ -309,6 +307,11 @@ class TranslateTests(TestCase):
         assert imarks[0].inputs[0].size == 4
         assert imarks[0].inputs[1].offset == 0x4009F8
         assert imarks[0].inputs[1].size == 4
+
+    def test_pretty_printing(self):
+        ctx = Context("x86:LE:64:default")
+        tx = ctx.translate(b"\x48\x31\xc0")
+        assert "RAX = RAX ^ RAX" in str(tx)
 
 
 if __name__ == "__main__":
