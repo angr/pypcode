@@ -27,15 +27,6 @@ def get_imarks(translation: Translation) -> List[PcodeOp]:
     return [op for op in translation.ops if op.opcode == OpCode.IMARK]
 
 
-# def pp_tx(translation: Translation) -> None:
-#     log.debug("%s", translation)
-
-
-# def pp_dx(disassembly) -> None:
-#     for ins in disassembly:
-#         log.debug("%x/%d: %s %s", ins.addr.offset, ins.length, ins.mnem, ins.body)
-
-
 class ContextTests(TestCase):
     """
     Basic Context tests
