@@ -23,7 +23,7 @@ Disassemble:
 
 .. ipython::
 
-   In [0]: from pypcode import Context, PcodePrettyPrinter
+   In [0]: from pypcode import Context
       ...: ctx = Context("x86:LE:64:default")
       ...: dx = ctx.disassemble(b"\x48\x35\x78\x56\x34\x12\xc3")
       ...: for ins in dx.instructions:
@@ -33,11 +33,11 @@ Translate to P-Code:
 
 .. ipython::
 
-   In [0]: from pypcode import Context, PcodePrettyPrinter
+   In [0]: from pypcode import Context
       ...: ctx = Context("x86:LE:64:default")
       ...: tx = ctx.translate(b"\x48\x35\x78\x56\x34\x12\xc3")
       ...: for op in tx.ops:
-      ...:     print(PcodePrettyPrinter.fmt_op(op))
+      ...:     print(op)
 
 Command Line Usage Example
 --------------------------

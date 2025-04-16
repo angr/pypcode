@@ -185,7 +185,17 @@ class PcodePrettyPrinter:
         OpCode.STORE: OpFormatSpecial(),
     }
 
-    @classmethod
-    def fmt_op(cls, op: PcodeOp) -> str:
-        fmt = cls.OP_FORMATS.get(op.opcode, cls.DEFAULT_OP_FORMAT)
+    @staticmethod
+    def fmt_op(op: PcodeOp) -> str:
+        fmt = PcodePrettyPrinter.OP_FORMATS.get(op.opcode, PcodePrettyPrinter.DEFAULT_OP_FORMAT)
         return (f"{fmt.fmt_vn(op.output)} = " if op.output else "") + fmt.fmt(op)
+
+    @staticmethod
+    def fmt_translation(tx: Translation) -> str:
+        return "\n".join(PcodePrettyPrinter.fmt_op(op) for op in tx.ops)
+
+
+# Monkey patch print handlers
+Varnode.__str__ = OpFormat.fmt_vn
+PcodeOp.__str__ = PcodePrettyPrinter.fmt_op
+Translation.__str__ = PcodePrettyPrinter.fmt_translation

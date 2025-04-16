@@ -11,7 +11,7 @@ import logging
 import sys
 from difflib import SequenceMatcher
 
-from pypcode import Arch, BadDataError, Context, OpCode, PcodePrettyPrinter, TranslateFlags, UnimplError
+from pypcode import Arch, BadDataError, Context, OpCode, TranslateFlags, UnimplError
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format="[%(name)s:%(levelname)s] %(message)s")
@@ -94,7 +94,7 @@ def main():
                 for insn in ctx.disassemble(disas_slice, disas_addr).instructions:
                     print(f"{insn.addr.offset:#x}/{insn.length}: {insn.mnem} {insn.body}")
             else:
-                print(f" {i - last_imark_idx - 1:3d}: {PcodePrettyPrinter.fmt_op(op)}")
+                print(f" {i - last_imark_idx - 1:3d}: {op}")
         print("")
     except (BadDataError, UnimplError) as e:
         print(f"An error occurred during translation: {e}")
