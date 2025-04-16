@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from .pypcode_native import OpCode, PcodeOp, Translation, Varnode  # pylint:disable=no-name-in-module
+from .pypcode_native import (  # pylint:disable=no-name-in-module
+    Disassembly,
+    Instruction,
+    OpCode,
+    PcodeOp,
+    Translation,
+    Varnode,
+)
 
 
 class OpFormat:
@@ -195,7 +202,17 @@ class PcodePrettyPrinter:
         return "\n".join(PcodePrettyPrinter.fmt_op(op) for op in tx.ops)
 
 
+def fmt_instruction(insn: Instruction) -> str:
+    return f"{insn.addr.offset:#x}/{insn.length}: {insn.mnem} {insn.body}"
+
+
+def fmt_disassembly(dx: Disassembly) -> str:
+    return "\n".join(fmt_instruction(insn) for insn in dx.instructions)
+
+
 # Monkey patch print handlers
-Varnode.__str__ = OpFormat.fmt_vn
+Disassembly.__str__ = fmt_disassembly
+Instruction.__str__ = fmt_instruction
 PcodeOp.__str__ = PcodePrettyPrinter.fmt_op
 Translation.__str__ = PcodePrettyPrinter.fmt_translation
+Varnode.__str__ = OpFormat.fmt_vn
