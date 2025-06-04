@@ -6,7 +6,7 @@ from __future__ import annotations
 import os.path
 import xml.etree.ElementTree as ET
 from enum import IntEnum
-from typing import cast, Dict, Generator, Sequence, Optional, Mapping, Tuple, Union
+from typing import cast, Generator, Sequence, Mapping
 
 from .__version__ import __version__
 
