@@ -2,6 +2,7 @@
 Pythonic interface to SLEIGH
 """
 
+from __future__ import annotations
 import os.path
 import xml.etree.ElementTree as ET
 from enum import IntEnum
@@ -95,8 +96,8 @@ class ArchLanguage:
     def __init__(self, archdir: str, ldef: ET.Element):
         self.archdir = archdir
         self.ldef = ldef
-        self._pspec: Optional[ET.Element] = None
-        self._cspecs: Optional[Dict[Tuple[str, str], ET.Element]] = None
+        self._pspec: ET.Element | None = None
+        self._cspecs: dict[tuple[str, str], ET.Element] | None = None
 
     @property
     def pspec_path(self) -> str:
@@ -119,13 +120,13 @@ class ArchLanguage:
         raise AttributeError(key)
 
     @property
-    def pspec(self) -> Optional[ET.Element]:
+    def pspec(self) -> ET.Element | None:
         if self._pspec is None:
             self._pspec = ET.parse(self.pspec_path).getroot()
         return self._pspec
 
     @property
-    def cspecs(self) -> Mapping[Tuple[str, str], ET.Element]:
+    def cspecs(self) -> Mapping[tuple[str, str], ET.Element]:
         if self._cspecs is None:
             self._cspecs = {}
             for e in self.ldef.findall("compiler"):
@@ -134,7 +135,7 @@ class ArchLanguage:
                 self._cspecs[(e.attrib["id"], e.attrib["name"])] = cspec
         return self._cspecs
 
-    def init_context_from_pspec(self, ctx: "Context") -> None:
+    def init_context_from_pspec(self, ctx: Context) -> None:
         if self.pspec is None:
             return
         cd = self.pspec.find("context_data")
@@ -148,7 +149,7 @@ class ArchLanguage:
             ctx.setVariableDefault(e.attrib["name"], int(e.attrib["val"]))
 
     @classmethod
-    def from_id(cls, langid: str) -> Optional["ArchLanguage"]:
+    def from_id(cls, langid: str) -> ArchLanguage | None:
         """
         Return language with given id, or None if the language could not be found.
         """
@@ -175,7 +176,7 @@ class Arch:
     archpath: str
     archname: str
     ldefpath: str
-    ldef: ET.ElementTree
+    ldef: ET.ElementTree[ET.Element[str]]
     languages: Sequence[ArchLanguage]
 
     def __init__(self, name: str, ldefpath: str):
@@ -192,7 +193,7 @@ class Arch:
         self.languages = [ArchLanguage(self.archpath, e) for e in self.ldef.getroot()]
 
     @classmethod
-    def enumerate(cls) -> Generator["Arch", None, None]:
+    def enumerate(cls) -> Generator[Arch]:
         """
         Enumerate all available architectures and languages.
 
@@ -221,9 +222,9 @@ class Context(_Context):
     )
 
     language: ArchLanguage
-    registers: Dict[str, Varnode]
+    registers: dict[str, Varnode]
 
-    def __init__(self, language: Union[ArchLanguage, str]):
+    def __init__(self, language: ArchLanguage | str):
         """
         Initialize a context for translation or disassembly.
 
