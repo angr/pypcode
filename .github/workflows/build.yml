@@ -38,6 +38,31 @@ jobs:
           name: source
           path: dist/*.tar.gz
 
+  build_pyodide_wheel:
+    needs: build_sdist
+    name: Build wheel for pyodide
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download source distribution
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: source
+      - name: Unpack source distribution
+        shell: bash
+        run: tar --strip-components 1 -xvf *.tar.gz
+      - name: Build wheel
+        uses: pypa/cibuildwheel@faf86a6ed7efa889faf6996aa23820831055001a # v2.23.3
+        with:
+          output-dir: wheelhouse
+        env:
+          CIBW_PLATFORM: pyodide
+          CIBW_BUILD_VERBOSITY: 1
+          # CIBW_TEST_COMMAND: python -m unittest discover -v -s {package}/tests
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ matrix.py }}-${{ matrix.platform.wheel_tag }}
+          path: ./wheelhouse/*.whl
+
   build_wheels:
     needs: build_sdist
     name: Build wheel ${{ matrix.py }}-${{ matrix.platform.wheel_tag }} on ${{ matrix.platform.os }}
