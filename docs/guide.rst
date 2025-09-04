@@ -99,5 +99,5 @@ SLEIGH & P-Code References
 --------------------------
 Extensive documentation covering SLEIGH and P-Code is available online:
 
-* `SLEIGH, P-Code Introduction <https://htmlpreview.github.io/?https://github.com/NationalSecurityAgency/ghidra/blob/Ghidra_11.4.1_build/GhidraDocs/languages/html/sleigh.html>`_
-* `P-Code Reference Manual <https://htmlpreview.github.io/?https://github.com/NationalSecurityAgency/ghidra/blob/Ghidra_11.4.1_build/GhidraDocs/languages/html/pcoderef.html>`_
+* `SLEIGH, P-Code Introduction <https://htmlpreview.github.io/?https://github.com/NationalSecurityAgency/ghidra/blob/Ghidra_11.4.2_build/GhidraDocs/languages/html/sleigh.html>`_
+* `P-Code Reference Manual <https://htmlpreview.github.io/?https://github.com/NationalSecurityAgency/ghidra/blob/Ghidra_11.4.2_build/GhidraDocs/languages/html/pcoderef.html>`_
