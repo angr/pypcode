@@ -29,7 +29,7 @@ docs = [
 ]
 
 [build-system]
-requires = [ "setuptools", "nanobind", "cmake" ]
+requires = [ "setuptools", "nanobind", "cmake", "wheel" ]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
