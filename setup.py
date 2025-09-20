@@ -8,6 +8,22 @@ import subprocess
 import sys
 from setuptools import setup
 from setuptools.command.build_ext import build_ext
+from wheel.bdist_wheel import bdist_wheel
+
+
+class bdist_wheel_abi3(bdist_wheel):
+    """
+    Overrides bdist_wheel to provide stable ABI platform tag.
+    """
+
+    def get_tag(self):
+        python, abi, plat = super().get_tag()
+
+        if python.startswith("cp") and sys.version_info >= (3, 12):
+            # on CPython, our wheels are abi3 and compatible back to 3.12
+            return "cp312", "abi3", plat
+
+        return python, abi, plat
 
 
 class BuildExtension(build_ext):
@@ -99,5 +115,5 @@ setup(
     package_data={
         "pypcode": add_pkg_data_dirs("pypcode", ["bin", "docs", "processors"]) + ["py.typed", "pypcode_native.pyi"]
     },
-    cmdclass={"build_ext": BuildExtension},
+    cmdclass={"build_ext": BuildExtension, "bdist_wheel": bdist_wheel_abi3},
 )
