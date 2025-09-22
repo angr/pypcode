@@ -69,6 +69,7 @@ add_executable(sleigh
 install(TARGETS sleigh DESTINATION bin)
 
 nanobind_add_module(pypcode_native
+  STABLE_ABI
   pypcode/pypcode_native.cpp
   ${SLEIGH_COMMON}
   ${ZLIB}
