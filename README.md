@@ -1,6 +1,7 @@
 pypcode
 =======
 [![pypi](https://img.shields.io/pypi/v/pypcode)](https://pypi.org/project/pypcode/)
+[![codecov](https://codecov.io/gh/angr/pypcode/graph/badge.svg?token=JCV27I1SPZ)](https://codecov.io/gh/angr/pypcode)
 
 Machine code disassembly and IR translation library for Python using the
 excellent SLEIGH library from the [Ghidra](https://ghidra-sre.org/) framework.
