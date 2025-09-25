@@ -73,4 +73,12 @@ nanobind_add_module(pypcode_native
   ${SLEIGH_COMMON}
   ${ZLIB}
   )
+
+if(DEFINED ENV{COVERAGE} AND NOT "$ENV{COVERAGE}" STREQUAL "")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(pypcode_native PRIVATE --coverage -O0 -g)
+    target_link_options(pypcode_native PRIVATE --coverage -O0 -g)
+  endif()
+endif()
+
 install(TARGETS pypcode_native DESTINATION .)
