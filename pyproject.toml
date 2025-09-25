@@ -27,6 +27,12 @@ docs = [
     "sphinx",
     "sphinx-autodoc-typehints",
 ]
+testing = [
+    "pytest",
+    "pytest-cov",
+    "coverage",
+    "gcovr",
+]
 
 [build-system]
 requires = [ "setuptools", "nanobind", "cmake" ]
@@ -47,4 +53,26 @@ target-version = ['py38']
 line-length = 120
 extend-ignore = [
 	"E402", # Bottom imports
+]
+
+[tool.pytest.ini_options]
+addopts = [
+  "--cov=pypcode",
+  "--cov-report=term-missing",
+  "--cov-branch",
+]
+testpaths = [ "tests" ]
+
+[tool.coverage.run]
+branch = true
+source = [ "pypcode" ]
+parallel = true
+omit = [ "tests/*" ]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:"
 ]

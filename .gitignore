@@ -9,3 +9,6 @@ docs/_build/
 *.manifest
 *.gradle
 *.java
+.coverage
+coverage.xml
+coverage-native.xml
