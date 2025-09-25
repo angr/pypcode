@@ -237,7 +237,7 @@ class Context(_Context):
             assert _l is not None
             self.language = _l
         else:
-            assert False, "Context must be initialized with a language or language id"
+            raise TypeError("Context must be initialized with a language or language id")
         super().__init__(f"<sleigh>{self.language.slafile_path}</sleigh>")
         self.language.init_context_from_pspec(self)
         self.registers = {n: v for v, n in self.getAllRegisters().items()}

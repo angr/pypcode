@@ -34,6 +34,10 @@ class ContextTests(TestCase):
 
     def tearDown(self):
         gc.collect()
+    
+    def test_bad_context_language_type(self):
+        with self.assertRaises(TypeError):
+            Context(1234)
 
     def test_can_create_all_language_contexts(self):
         for arch in Arch.enumerate():
