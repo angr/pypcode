@@ -3,10 +3,19 @@
 
 import unittest
 import base64
-import subprocess
 import tempfile
 import sys
 import os
+import io
+from unittest import mock
+
+from pypcode.__main__ import main
+
+
+def run_cli(*args):
+    with mock.patch("sys.argv", [sys.executable, *args]), mock.patch("sys.stdout", new=io.StringIO()) as fake_out:
+        main()
+        return fake_out.getvalue()
 
 
 class TestCli(unittest.TestCase):
@@ -15,7 +24,8 @@ class TestCli(unittest.TestCase):
     """
 
     def test_cli_list(self):
-        subprocess.run([sys.executable, "-m", "pypcode", "-l"], check=True)
+        output = run_cli("-l")
+        assert "x86:LE:64:default" in output
 
     def test_cli_trans(self):
         with tempfile.NamedTemporaryFile(delete=False) as tf:
@@ -24,10 +34,8 @@ class TestCli(unittest.TestCase):
             path = tf.name
 
         try:
-            subprocess.run(
-                [sys.executable, "-m", "pypcode", "x86:LE:64:default", path],
-                check=True,
-            )
+            output = run_cli("x86:LE:64:default", path)
+            assert "0x17/1: RET" in output
         finally:
             os.unlink(path)
 
