@@ -34,7 +34,7 @@ class ContextTests(TestCase):
 
     def tearDown(self):
         gc.collect()
-    
+
     def test_bad_context_language_type(self):
         with self.assertRaises(TypeError):
             Context(1234)
