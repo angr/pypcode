@@ -4,9 +4,11 @@
 import gc
 import logging
 from unittest import main, TestCase
-from typing import List
+from unittest.mock import create_autospec
+from typing import cast, List
 
 from pypcode import (
+    AddrSpace,
     Arch,
     ArchLanguage,
     BadDataError,
@@ -17,7 +19,9 @@ from pypcode import (
     TranslateFlags,
     Translation,
     UnimplError,
+    Varnode,
 )
+from pypcode.printing import OpFormat, PcodePrettyPrinter
 
 # logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -313,6 +317,124 @@ class TranslateTests(TestCase):
         ctx = Context("x86:LE:64:default")
         tx = ctx.translate(b"\x48\x31\xc0")
         assert "RAX = RAX ^ RAX" in str(tx)
+
+
+class PrintingTests(TestCase):
+    """
+    Pretty printing tests.
+    """
+
+    def test_branches(self):
+        for opc, output in [
+            (OpCode.BRANCH, "goto ram[123:4]"),
+            (OpCode.BRANCHIND, "goto [ram[123:4]]"),
+            (OpCode.CALL, "call ram[123:4]"),
+            (OpCode.CALLIND, "call [ram[123:4]]"),
+            (OpCode.RETURN, "return ram[123:4]"),
+        ]:
+            vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+            vn.space.name = "ram"
+            vn.offset = 0x123
+            vn.size = 4
+
+            op = cast(PcodeOp, create_autospec(PcodeOp, instance=True, spec_set=True))
+            op.opcode = opc
+            op.output = None
+            op.inputs = [vn]
+
+            assert PcodePrettyPrinter.fmt_op(op) == output
+
+    def test_cbranch(self):
+        target_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        target_vn.space.name = "ram"
+        target_vn.offset = 0x456
+        target_vn.size = 4
+
+        cond_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        cond_vn.space.name = "ram"
+        cond_vn.offset = 0x123
+        cond_vn.size = 1
+
+        op = cast(PcodeOp, create_autospec(PcodeOp, instance=True, spec_set=True))
+        op.opcode = OpCode.CBRANCH
+        op.output = None
+        op.inputs = [target_vn, cond_vn]
+
+        assert PcodePrettyPrinter.fmt_op(op) == "if (ram[123:1]) goto ram[456:4]"
+
+    def test_load(self):
+        dest_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        dest_vn.space.name = "ram"
+        dest_vn.offset = 0x123
+        dest_vn.size = 1
+
+        space = cast(AddrSpace, create_autospec(AddrSpace, instance=True, spec_set=True))
+        space.name = "ram"
+
+        space_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        space_vn.space.name = "const"
+        space_vn.getSpaceFromConst.return_value = space
+
+        offset_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        offset_vn.space.name = "const"
+        offset_vn.offset = 0x456
+        offset_vn.size = 1
+
+        op = cast(PcodeOp, create_autospec(PcodeOp, instance=True, spec_set=True))
+        op.opcode = OpCode.LOAD
+        op.output = dest_vn
+        op.inputs = [space_vn, offset_vn]
+
+        assert PcodePrettyPrinter.fmt_op(op) == "ram[123:1] = *[ram]0x456"
+
+    def test_store(self):
+        space = cast(AddrSpace, create_autospec(AddrSpace, instance=True, spec_set=True))
+        space.name = "ram"
+
+        space_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        space_vn.space.name = "const"
+        space_vn.getSpaceFromConst.return_value = space
+
+        offset_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        offset_vn.space.name = "const"
+        offset_vn.offset = 0x123
+        offset_vn.size = 1
+
+        value_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        value_vn.space.name = "const"
+        value_vn.offset = 0x456
+        value_vn.size = 1
+
+        op = cast(PcodeOp, create_autospec(PcodeOp, instance=True, spec_set=True))
+        op.opcode = OpCode.STORE
+        op.output = None
+        op.inputs = [space_vn, offset_vn, value_vn]
+
+        assert PcodePrettyPrinter.fmt_op(op) == "*[ram]0x123 = 0x456"
+
+    def test_callother(self):
+        target_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        target_vn.getUserDefinedOpName.return_value = "udop"
+
+        arg_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        arg_vn.space.name = "const"
+        arg_vn.offset = 0x456
+        arg_vn.size = 1
+
+        op = cast(PcodeOp, create_autospec(PcodeOp, instance=True, spec_set=True))
+        op.opcode = OpCode.CALLOTHER
+        op.output = None
+        op.inputs = [target_vn, arg_vn]
+
+        assert PcodePrettyPrinter.fmt_op(op) == "udop(0x456)"
+
+    def test_no_regname(self):
+        arg_vn = cast(Varnode, create_autospec(Varnode, instance=True, spec_set=True))
+        arg_vn.space.name = "register"
+        arg_vn.offset = 0x123
+        arg_vn.size = 4
+        arg_vn.getRegisterName.return_value = None
+        assert OpFormat.fmt_vn(arg_vn) == "register[123:4]"
 
 
 if __name__ == "__main__":
