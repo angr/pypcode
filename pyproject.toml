@@ -1,7 +1,8 @@
 [project]
 name = "pypcode"
 description = "Machine code disassembly and IR translation library"
-license = { file = "LICENSE.txt" }
+license = "BSD-2-Clause AND Apache-2.0 AND Zlib"
+license-files = [ "LICENSE.txt" ]
 readme = { file = "README.md", content-type = "text/markdown" }
 classifiers = [
     "Programming Language :: Python",
