@@ -58,19 +58,19 @@ repos:
     -   id: rm-unneeded-f-str
 
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.0
+    rev: v3.21.1
     hooks:
     -   id: pyupgrade
         args: [--py38-plus]
 
 # Last modifier: Coding Standard
 -   repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.9.0
+    rev: 25.11.0
     hooks:
     -   id: black
 
 -   repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v21.1.2
+    rev: v21.1.5
     hooks:
     -   id: clang-format
         files: pypcode/pypcode_native.cpp
@@ -99,7 +99,7 @@ repos:
     -   id: check-docstring-first
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.3
+    rev: v0.14.4
     hooks:
     -   id: ruff
 
