@@ -19,7 +19,6 @@ from dataclasses import dataclass
 
 from typing import cast, Any, Callable, Dict, Iterable, List, Tuple
 
-
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
