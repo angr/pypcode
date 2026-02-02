@@ -2,7 +2,7 @@
 set -e
 set -x
 
-TAG=12.0.1
+TAG=12.0.2
 GHIDRA_SRC_DIR=ghidra_src_${TAG}
 git clone --depth=1 -b Ghidra_${TAG}_build https://github.com/NationalSecurityAgency/ghidra.git ${GHIDRA_SRC_DIR}
 
