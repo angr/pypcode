@@ -5,7 +5,7 @@ import gc
 import logging
 from unittest import main, TestCase
 from unittest.mock import create_autospec
-from typing import cast, List
+from typing import cast
 
 from pypcode import (
     AddrSpace,
