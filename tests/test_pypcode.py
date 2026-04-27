@@ -27,7 +27,7 @@ from pypcode.printing import OpFormat, PcodePrettyPrinter
 log = logging.getLogger(__name__)
 
 
-def get_imarks(translation: Translation) -> List[PcodeOp]:
+def get_imarks(translation: Translation) -> list[PcodeOp]:
     return [op for op in translation.ops if op.opcode == OpCode.IMARK]
 
 
