@@ -17,7 +17,8 @@ import sys
 import time
 from dataclasses import dataclass
 
-from typing import cast, Any, Callable, Dict, Iterable, List, Tuple
+from typing import cast, Any
+from collections.abc import Callable, Iterable
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -85,9 +86,9 @@ def get_file_hash(binary_path: str) -> str:
     return d
 
 
-def get_blocks(binary_path: str) -> List[Block]:
+def get_blocks(binary_path: str) -> list[Block]:
     blocks_file_path = f"blocks_{get_file_hash(binary_path)[0:8]}.cache"
-    blocks: List[Block] = []
+    blocks: list[Block] = []
 
     if not os.path.exists(blocks_file_path):
         log.info("Recovering blocks from CFG...")
@@ -121,7 +122,7 @@ def get_blocks(binary_path: str) -> List[Block]:
     return blocks
 
 
-def benchmark_pypcode(blocks: List[Block], iter_ops: bool = False, iter_varnodes: bool = False) -> BenchmarkResult:
+def benchmark_pypcode(blocks: list[Block], iter_ops: bool = False, iter_varnodes: bool = False) -> BenchmarkResult:
     assert pypcode is not None
 
     start_time = time.time()
@@ -144,7 +145,7 @@ def benchmark_pypcode(blocks: List[Block], iter_ops: bool = False, iter_varnodes
     return BenchmarkResult(startup_duration, translation_duration)
 
 
-def benchmark_pypcode_disassembly(blocks: List[Block]) -> BenchmarkResult:
+def benchmark_pypcode_disassembly(blocks: list[Block]) -> BenchmarkResult:
     assert pypcode is not None
 
     start_time = time.time()
@@ -161,7 +162,7 @@ def benchmark_pypcode_disassembly(blocks: List[Block]) -> BenchmarkResult:
     return BenchmarkResult(startup_duration, translation_duration)
 
 
-def benchmark_pyvex(blocks: List[Block], **vex_args) -> BenchmarkResult:
+def benchmark_pyvex(blocks: list[Block], **vex_args) -> BenchmarkResult:
     assert pyvex is not None
 
     start_time = time.time()
@@ -176,7 +177,7 @@ def benchmark_pyvex(blocks: List[Block], **vex_args) -> BenchmarkResult:
     return BenchmarkResult(startup_duration, translation_duration)
 
 
-def benchmark_capstone(blocks: List[Block], lite: bool = False) -> BenchmarkResult:
+def benchmark_capstone(blocks: list[Block], lite: bool = False) -> BenchmarkResult:
     assert capstone is not None
 
     start_time = time.time()
@@ -199,9 +200,9 @@ def benchmark_capstone(blocks: List[Block], lite: bool = False) -> BenchmarkResu
 
 
 def gen_benchmarks_from_configurations(
-    name: str, benchmark_func: Callable, configurations: List[Dict[str, Any]]
-) -> List[Tuple[str, Callable]]:
-    benchmarks: List[Tuple[str, Callable]] = []
+    name: str, benchmark_func: Callable, configurations: list[dict[str, Any]]
+) -> list[tuple[str, Callable]]:
+    benchmarks: list[tuple[str, Callable]] = []
     for config in configurations:
         name_append = ""
         if config:
@@ -239,7 +240,7 @@ def main() -> None:
     for name, version, import_duration in imports:
         log.info("%s v%s took %.2f ms to import", name, version, import_duration * 1000)
 
-    benchmarks: List[Tuple[str, Callable]] = []
+    benchmarks: list[tuple[str, Callable]] = []
     if HAVE_CAPSTONE and "capstone" not in args.skip:
         benchmarks.extend(
             gen_benchmarks_from_configurations(
@@ -300,7 +301,7 @@ def main() -> None:
     log.info("Benchmark includes %d blocks totaling %.1f KiB", num_blocks, blocks_total_size / 1024)
 
     gc.collect()
-    results: List[Tuple[str, BenchmarkResult]] = []
+    results: list[tuple[str, BenchmarkResult]] = []
     gc.disable()
     for name, benchmark in benchmarks:
         log.info("Benchmarking %s performance...", name)

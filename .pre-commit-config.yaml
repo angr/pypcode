@@ -61,7 +61,7 @@ repos:
     rev: v3.21.2
     hooks:
     -   id: pyupgrade
-        args: [--py38-plus]
+        args: [--py312-plus]
 
 # Last modifier: Coding Standard
 -   repo: https://github.com/psf/black-pre-commit-mirror

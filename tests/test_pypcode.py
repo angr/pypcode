@@ -5,7 +5,7 @@ import gc
 import logging
 from unittest import main, TestCase
 from unittest.mock import create_autospec
-from typing import cast, List
+from typing import cast
 
 from pypcode import (
     AddrSpace,
@@ -27,7 +27,7 @@ from pypcode.printing import OpFormat, PcodePrettyPrinter
 log = logging.getLogger(__name__)
 
 
-def get_imarks(translation: Translation) -> List[PcodeOp]:
+def get_imarks(translation: Translation) -> list[PcodeOp]:
     return [op for op in translation.ops if op.opcode == OpCode.IMARK]
 
 
