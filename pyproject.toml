@@ -8,12 +8,11 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dynamic = [ "version" ]
 
 [project.urls]
@@ -48,7 +47,7 @@ ext-modules = [
 
 [tool.black]
 line-length = 120
-target-version = ['py38']
+target-version = ['py312']
 
 [tool.ruff]
 line-length = 120
