@@ -70,7 +70,7 @@ repos:
     -   id: black
 
 -   repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.4
+    rev: v22.1.5
     hooks:
     -   id: clang-format
         files: pypcode/pypcode_native.cpp
@@ -104,7 +104,7 @@ repos:
     -   id: ruff
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.20.2
+    rev: v2.0.0
     hooks:
     -   id: mypy
 
