@@ -22,6 +22,8 @@ cleanup and reorganization was done after generating the intial SLEIGH.
 Data was copied from various files in binutils, a lot of it unused.
 """
 
+import sys
+import re
 
 MATCH_SLLI_RV32=0x1013
 MASK_SLLI_RV32=0xfe00707f
@@ -2777,7 +2779,7 @@ def find_gaps(op):
     pattern = 0x0
     for x in op.bitpattern:
         x = x.split('=')[0]
-        if x not in gap.keys():
+        if not x in gap.keys():
             print("GAP: %r" % x)
             exit(1)
         x = gap[x]
