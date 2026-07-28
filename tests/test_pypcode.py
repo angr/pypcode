@@ -3,9 +3,9 @@
 
 import gc
 import logging
-from unittest import main, TestCase
-from unittest.mock import create_autospec
 from typing import cast
+from unittest import TestCase, main
+from unittest.mock import create_autospec
 
 from pypcode import (
     AddrSpace,
@@ -168,6 +168,33 @@ class DisassembleTests(TestCase):
         with self.assertRaises(BadDataError):
             ctx.disassemble(b"\x40\x40")
 
+    def test_truncated_instruction(self):
+        ctx = Context("x86:LE:16:Real Mode")
+        with self.assertRaises(BadDataError):
+            ctx.disassemble(b"\xe8")
+        with self.assertRaises(BadDataError):
+            ctx.disassemble(b"\xe8\x00\x00", max_bytes=1)
+        with self.assertRaises(BadDataError):
+            ctx.disassemble(b"\x90\xe8", offset=1)
+
+        dx = ctx.disassemble(b"\x90")
+        assert len(dx.instructions) == 1
+        assert dx.instructions[0].mnem == "NOP"
+
+        dx = ctx.disassemble(b"\x90\xe8")
+        assert len(dx.instructions) == 1
+        assert dx.instructions[0].mnem == "NOP"
+
+        dx = ctx.disassemble(b"\xe8\x00\x00")
+        assert len(dx.instructions) == 1
+        assert dx.instructions[0].length == 3
+        assert dx.instructions[0].mnem == "CALL"
+
+        ctx = Context("MIPS:BE:32:default")
+        dx = ctx.disassemble(b"\x10@\x00\x06")
+        assert len(dx.instructions) == 1
+        assert dx.instructions[0].length == 4
+
     def test_partial_decode_failure(self):
         ctx = Context("x86:LE:64:default")
         dx = ctx.disassemble(b"\xff\xc0\x90\x40\x40")  # inc eax; nop; bad
@@ -231,6 +258,66 @@ class TranslateTests(TestCase):
         ctx = Context("x86:LE:64:default")
         with self.assertRaises(BadDataError):
             ctx.translate(b"\x40\x40")
+
+    def test_truncated_instruction(self):
+        ctx = Context("x86:LE:16:Real Mode")
+        with self.assertRaises(BadDataError):
+            ctx.translate(b"\xe8")
+        with self.assertRaises(BadDataError):
+            ctx.translate(b"\xe8\x00\x00", max_bytes=1)
+        with self.assertRaises(BadDataError):
+            ctx.translate(b"\x90\xe8", offset=1)
+
+        tx = ctx.translate(b"\x90")
+        imarks = get_imarks(tx)
+        assert len(imarks) == 1
+        assert imarks[0].inputs[0].size == 1
+
+        tx = ctx.translate(b"\x90\xe8")
+        imarks = get_imarks(tx)
+        assert len(imarks) == 1
+        assert imarks[0].inputs[0].size == 1
+
+        tx = ctx.translate(b"\xe8\x00\x00")
+        imarks = get_imarks(tx)
+        assert len(imarks) == 1
+        assert imarks[0].inputs[0].size == 3
+
+    def test_truncated_unimplemented_instruction(self):
+        ctx = Context("Toy:BE:32:default")
+        with self.assertRaises(BadDataError):
+            ctx.translate(b"\xa8")
+        with self.assertRaises(UnimplError):
+            ctx.translate(b"\xa8\x00")
+
+    def test_truncated_delay_slot(self):
+        ctx = Context("MIPS:BE:32:default")
+        with self.assertRaises(BadDataError):
+            ctx.translate(b"\x10@\x00\x06")
+        with self.assertRaises(BadDataError):
+            ctx.translate(b"\x10@\x00\x06\x00 \x08%", max_bytes=4)
+
+    def test_truncated_inst_next2(self):
+        ctx = Context("Toy:BE:32:builder")
+        for buf in (bytes.fromhex("8000d9"), bytes.fromhex("8000d932")):
+            with self.subTest(buf=buf), self.assertRaises(BadDataError):
+                ctx.translate(buf, max_instructions=1)
+        with self.assertRaises(BadDataError):
+            ctx.translate(bytes.fromhex("8000d9320000"), max_bytes=4, max_instructions=1)
+
+        tx = ctx.translate(bytes.fromhex("8000d9320000"), max_instructions=1)
+        branch = next(op for op in tx.ops if op.opcode == OpCode.CBRANCH)
+        assert branch.inputs[0].offset == 6
+
+    def test_inst_next2_not_cached(self):
+        ctx = Context("Toy:BE:32:builder")
+        tx = ctx.translate(bytes.fromhex("80000000"), max_instructions=1)
+        branch = next(op for op in tx.ops if op.opcode == OpCode.CBRANCH)
+        assert branch.inputs[0].offset == 4
+
+        tx = ctx.translate(bytes.fromhex("8000d9320000"), max_instructions=1)
+        branch = next(op for op in tx.ops if op.opcode == OpCode.CBRANCH)
+        assert branch.inputs[0].offset == 6
 
     def test_partial_decode_failure(self):
         ctx = Context("x86:LE:64:default")

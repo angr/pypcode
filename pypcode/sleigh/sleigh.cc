@@ -669,6 +669,7 @@ void Sleigh::resolve(ParserContext &pos) const
 	pos.setDelaySlot(templ->delaySlot());
     }
   }
+  loader->validateRange(pos.getAddr(),pos.getLength());
   pos.setNaddr(pos.getAddr()+pos.getLength());	// Update Naddr to pointer after instruction
   pos.setParserState(ParserContext::disassembly);
 }

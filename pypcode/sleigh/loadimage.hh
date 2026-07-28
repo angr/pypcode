@@ -86,6 +86,7 @@ public:
   virtual ~LoadImage(void);	///< LoadImage destructor
   const string &getFileName(void) const; ///< Get the name of the LoadImage
   virtual void loadFill(uint1 *ptr,int4 size,const Address &addr)=0; ///< Get data from the LoadImage
+  virtual void validateRange(const Address &,int4) const {} ///< Verify an address range is available
   virtual void openSymbols(void) const; ///< Prepare to read symbols
   virtual void closeSymbols(void) const; ///< Stop reading symbols
   virtual bool getNextSymbol(LoadImageFunc &record) const; ///< Get the next symbol record

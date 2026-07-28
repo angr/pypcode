@@ -104,7 +104,6 @@ public:
     {
         LOG("Filling %d bytes at %lx", size, addr.getOffset());
         uintb start = addr.getOffset();
-        uintb max = m_baseaddr + m_length - 1;
 
         //
         // When decoding an instruction, SLEIGH will attempt to pull in several
@@ -114,18 +113,37 @@ public:
         // Otherwise, if we have some data to provide but cannot satisfy the
         // entire request, fill the remainder of the buffer with zero.
         //
-        if (start > max || start < m_baseaddr) {
-            throw std::out_of_range("Attempting to lift outside buffer range");
+        if (m_length <= 0 || start < m_baseaddr) {
+            throw BadDataError("Instruction extends beyond the supplied buffer");
+        }
+
+        uintb offset = start - m_baseaddr;
+        uintb available = static_cast<uintb>(m_length);
+        if (offset >= available) {
+            throw BadDataError("Instruction extends beyond the supplied buffer");
         }
 
         for (int4 i = 0; i < size; i++) {
-            uintb curoff = start + i;
-            if ((curoff < m_baseaddr) || (curoff > max)) {
+            uintb diff = offset + static_cast<uintb>(i);
+            if (diff >= available) {
                 ptr[i] = 0;
                 continue;
             }
-            uintb diff = curoff - m_baseaddr;
             ptr[i] = m_data[(int4)diff];
+        }
+    }
+
+    void validateRange(const Address &addr, int4 size) const override
+    {
+        uintb start = addr.getOffset();
+        if (m_length < 0 || size < 0 || start < m_baseaddr) {
+            throw BadDataError("Instruction extends beyond the supplied buffer");
+        }
+
+        uintb offset = start - m_baseaddr;
+        uintb available = static_cast<uintb>(m_length);
+        if (offset > available || static_cast<uintb>(size) > available - offset) {
+            throw BadDataError("Instruction extends beyond the supplied buffer");
         }
     }
 

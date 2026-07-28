@@ -104,7 +104,7 @@ public:
   void deallocateState(ParserWalkerChange &walker);
   void allocateOperand(int4 i,ParserWalkerChange &walker);
   void setAddr(const Address &ad) { addr = ad; n2addr = Address(); }
-  void setNaddr(const Address &ad) { naddr = ad; }
+  void setNaddr(const Address &ad) { naddr = ad; n2addr = Address(); }
   void setCalladdr(const Address &ad) { calladdr = ad; }
   void addCommit(TripleSymbol *sym,int4 num,uintm mask,bool flow,ConstructState *point);
   void clearCommits(void) { contextcommit.clear(); }
