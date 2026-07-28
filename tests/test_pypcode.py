@@ -400,6 +400,14 @@ class TranslateTests(TestCase):
         assert imarks[0].inputs[1].offset == 0x4009F8
         assert imarks[0].inputs[1].size == 4
 
+    def test_variable_length_delay_slot(self):
+        ctx = Context("Toy:BE:32:builder")
+        tx = ctx.translate(bytes.fromhex("f500d9320000d000"), max_instructions=3)
+        assert [[(vn.offset, vn.size) for vn in imark.inputs] for imark in get_imarks(tx)] == [
+            [(0, 2), (2, 4)],
+            [(6, 2)],
+        ]
+
     def test_pretty_printing(self):
         ctx = Context("x86:LE:64:default")
         tx = ctx.translate(b"\x48\x31\xc0")

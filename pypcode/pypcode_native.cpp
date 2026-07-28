@@ -396,7 +396,7 @@ public:
                 VarnodeData &imark_vn = imark_op.m_inputs.back();
                 imark_vn.space = addr.getSpace();
                 imark_vn.offset = addr.getOffset() + sum;
-                imark_vn.size = m_sleigh->instructionLength(addr);
+                imark_vn.size = m_sleigh->instructionLength(addr + sum);
 
                 sum += imark_vn.size;
                 num_instructions++;
