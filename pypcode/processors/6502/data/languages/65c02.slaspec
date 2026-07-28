@@ -1,3 +1,4 @@
+@define IS_65C02 "1"
 @include "6502.slaspec"
 
 define token bitopbyte (8)
@@ -19,7 +20,7 @@ define token testopbyte (8)
 ################################################################
 
 # Zero Page Indirect
-ZIOP:   (imm8)    is bbb=4; imm8  { addr:2 = imm8; tmp:2 = *:2 addr; export *:1 tmp; }
+ZIOP:   (imm8)    is bbb=4; imm8  { ptr:1 = imm8; local tmp:2; readZeroPagePointer(ptr, tmp); export *:1 tmp; }
 
 OPTB:   imm8      is tbb=1; imm8  { export *:1 imm8; }
 OPTB:   imm16     is tbb=3; imm16 { export *:1 imm16; }
@@ -32,12 +33,7 @@ ADDRIX: (imm16,X) is X; imm16     { addr:2 = imm16 + zext(X); tmp:2 = *:2 addr; 
 :ADC ZIOP                      is (cc=2 & aaa=3) ... & ZIOP
 {
     local op1 = ZIOP;
-    local tmpC = C;
-
-    C = carry(A, op1);
-    A = A + op1 + tmpC;
-    resultFlags(A);
-    V = C;
+    binaryAddWithCarry(A, op1);
 }
 
 :AND ZIOP                      is (cc=2 & aaa=1) ... & ZIOP
@@ -129,27 +125,23 @@ ADDRIX: (imm16,X) is X; imm16     { addr:2 = imm16 + zext(X); tmp:2 = *:2 addr; 
 
 :PHX                           is op=0xDA
 {
-    *:1 (SP) = X;
-    SP = SP - 1;
+    push8(X);
 }
 
 :PLX                           is op=0xFA
 {
-    SP = SP + 1;
-    X = *:1 (SP);
+    pop8(X);
     resultFlags(X);
 }
 
 :PHY                           is op=0x5A
 {
-    *:1 (SP) = Y;
-    SP = SP - 1;
+    push8(Y);
 }
 
 :PLY                           is op=0x7A
 {
-    SP = SP + 1;
-    Y = *:1 (SP);
+    pop8(Y);
     resultFlags(Y);
 }
 
@@ -163,10 +155,7 @@ ADDRIX: (imm16,X) is X; imm16     { addr:2 = imm16 + zext(X); tmp:2 = *:2 addr; 
 :SBC ZIOP                      is (cc=2 & aaa=7) ... & ZIOP
 {
     local op1 = ZIOP;
-    local result = A - op1 - !C;
-
-    subtraction_flags1(A, op1, result);
-    A = result;
+    binarySubtractWithCarry(A, op1);
 }
 
 :SMB "#"bitindex, imm8         is (action=1 & optype=7) & bitindex ; imm8 {
