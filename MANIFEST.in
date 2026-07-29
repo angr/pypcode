@@ -4,4 +4,8 @@ include CMakeLists.txt
 include LICENSE.txt
 graft tests
 global-exclude *.so
+global-exclude *.pyd
+global-exclude *.sla
+global-exclude *.pyc
+global-exclude *.pyo
 global-exclude *.gitignore

@@ -35,7 +35,9 @@ testing = [
 ]
 
 [build-system]
-requires = [ "setuptools", "nanobind", "cmake" ]
+# Setuptools 77.0.1 is the first published release supporting the PEP 639
+# license expression and license-files metadata declared above.
+requires = [ "setuptools>=77.0.1", "nanobind", "cmake" ]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]

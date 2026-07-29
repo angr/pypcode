@@ -5,6 +5,9 @@ dist/
 pypcode/bin/
 docs/_build/
 *.so
+*.pyd
+*.pyc
+*.pyo
 *.sla
 *.manifest
 *.gradle
