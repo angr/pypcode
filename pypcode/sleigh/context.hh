@@ -94,6 +94,7 @@ private:
   ConstructState *base_state;
   int4 alloc;			// Number of ConstructState's allocated
   int4 delayslot;		// delayslot depth
+  void parseTreeOverflow(const string &msg) const; // Reject an instruction that outgrows the parse tree
 public:
   ParserContext(ContextCache *ccache,Translate *trans);
   ~ParserContext(void) { if (context != (uintm *)0) delete [] context; }
@@ -128,12 +129,19 @@ public:
 };
   
 class ParserWalker {		// A class for walking the ParserContext
+public:
+				// Size of the breadcrumb trail, so one more than the deepest operand
+				// nesting an instruction may have.  The deepest tree a shipped language
+				// builds is 36 levels, but a JVM lookupswitch nests once per table entry
+				// and has no bound of its own
+  enum { max_depth = 128 };
+private:
   const ParserContext *const_context;
   const ParserContext *cross_context;
 protected:
   ConstructState *point;	// The current node being visited
   int4 depth;			// Depth of the current node
-  int4 breadcrumb[32];	// Path of operands from root
+  int4 breadcrumb[max_depth];	// Path of operands from root
 public:
   ParserWalker(const ParserContext *c) { const_context = c; cross_context = (const ParserContext *)0; }
   ParserWalker(const ParserContext *c,const ParserContext *cross) { const_context = c; cross_context = cross; }
@@ -175,7 +183,7 @@ public:
   ParserContext *getParserContext(void) { return context; }
   ConstructState *getPoint(void) { return point; }
   void setOffset(uint4 off) { point->offset = off; }
-  void setConstructor(Constructor *c) { point->ct = c; }
+  void setConstructor(Constructor *c);
   void setCurrentLength(int4 len) { point->length = len; }
   void calcCurrentLength(int4 length,int4 numopers);
 };
@@ -191,10 +199,14 @@ inline void ParserContext::deallocateState(ParserWalkerChange &walker) {
 }
 
 inline void ParserContext::allocateOperand(int4 i,ParserWalkerChange &walker) {
+  if (alloc >= (int4)state.size())
+    parseTreeOverflow("Instruction parse tree is too large");
+  if (walker.depth + 1 >= ParserWalker::max_depth)
+    parseTreeOverflow("Instruction parse tree is too deep");
   ConstructState *opstate = &state[alloc++];
   opstate->parent = walker.point;
   opstate->ct = (Constructor *)0;
-  walker.point->resolve[i] = opstate;
+  walker.point->resolve[i] = opstate;	// Sized to hold every operand by setConstructor
   walker.breadcrumb[walker.depth++] += 1;
   walker.point = opstate;
   walker.breadcrumb[walker.depth] = 0;

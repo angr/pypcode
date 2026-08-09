@@ -3,6 +3,8 @@
 
 import gc
 import logging
+import subprocess
+import sys
 from unittest import main, TestCase
 from unittest.mock import create_autospec
 from typing import cast
@@ -317,6 +319,117 @@ class TranslateTests(TestCase):
         ctx = Context("x86:LE:64:default")
         tx = ctx.translate(b"\x48\x31\xc0")
         assert "RAX = RAX ^ RAX" in str(tx)
+
+
+# Translate one instruction, given a language id and hex-encoded bytes, and print either the
+# instruction it decoded to or the name of the exception that was raised.
+TRANSLATE_ONE = """
+import sys
+
+import pypcode
+
+ctx = pypcode.Context(sys.argv[1])
+code = bytes.fromhex(sys.argv[2])
+try:
+    ctx.translate(code, max_instructions=1)
+    ins = ctx.disassemble(code, max_instructions=1).instructions[0]
+    print(ins.mnem, ins.body)
+except Exception as exc:
+    print(type(exc).__name__)
+"""
+
+# Refuse one instruction, then go on using the same Context. Prints, one per line, the outcome of
+# translating the refused bytes, then the good bytes at the refused address and at two further
+# addresses sharing its parser cache slot, then the refused bytes again.
+REFUSE_THEN_REUSE = """
+import sys
+
+import pypcode
+
+ctx = pypcode.Context(sys.argv[1])
+refused = bytes.fromhex(sys.argv[2])
+good = bytes.fromhex(sys.argv[3])
+
+def attempt(code, address):
+    try:
+        ctx.translate(code, base_address=address, max_instructions=1)
+        return ctx.disassemble(code, base_address=address, max_instructions=1).instructions[0].mnem
+    except Exception as exc:
+        return type(exc).__name__
+
+print(attempt(refused, 0x1000))
+for address in (0x1000, 0x1020, 0x1040):
+    print(attempt(good, address))
+print(attempt(refused, 0x1000))
+"""
+
+
+class ParseTreeTests(TestCase):
+    """
+    Tests for instructions with an unusually large Constructor tree
+    """
+
+    def run_in_subprocess(self, program: str, *args: str) -> subprocess.CompletedProcess[str]:
+        """
+        Run `program` in a child interpreter and report how the child ended.
+
+        An instruction that outgrows the parse tree writes past it without raising, so the damage
+        surfaces as a heap abort or a segfault that the process doing it cannot observe. Only a
+        child process can be inspected for it.
+
+        The child runs with -P so that it imports the pypcode under test rather than whatever
+        happens to sit in the working directory, which is the source tree when the suite is run
+        from the repository root.
+        """
+        return subprocess.run(
+            [sys.executable, "-P", "-c", program, *args],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def test_more_operands_than_allotted(self):
+        # AltiVec arithmetic is spelled out one operand per vector lane, so vaddubm declares 24
+        # operands and vadduhm and vsubuhm declare 27, against an allotment of 20.
+        for code, mnem in [
+            (b"\x10\x00\x00\x00", "vaddubm"),
+            (b"\x10\x00\x00\x40", "vadduhm"),
+            (b"\x10\x00\x04\x40", "vsubuhm"),
+        ]:
+            with self.subTest(mnem=mnem):
+                proc = self.run_in_subprocess(TRANSLATE_ONE, "PowerPC:BE:32:default", code.hex())
+                assert proc.returncode == 0, proc.stderr
+                assert mnem in proc.stdout
+
+    def test_more_nodes_than_allotted(self):
+        # A register list takes one Constructor per register, so an instruction naming enough of
+        # them outgrows the node array. vldmia with 31 registers also nests deeper than the
+        # walker's breadcrumb trail used to reach.
+        for langid, code, body in [
+            ("ARM:LE:32:v7", b"\x14\x0a\x90\xec", "vldmia r0,{s0,s1,s2,"),  # 20 registers, 76 nodes
+            ("ARM:LE:32:v7", b"\x1f\x0a\x90\xec", "s29,s30}"),  # 31 registers, 109 nodes, 36 deep
+            ("NDS32:LE:32:default", b"\x3b\xc5\x37\x45", "lmwa.bim fp,"),  # 76 nodes
+        ]:
+            with self.subTest(langid=langid, code=code.hex()):
+                proc = self.run_in_subprocess(TRANSLATE_ONE, langid, code.hex())
+                assert proc.returncode == 0, proc.stderr
+                assert body in proc.stdout
+
+    def test_parse_tree_limit_is_reported(self):
+        # A JVM lookupswitch consumes its table by recursing once per entry, with the entry count
+        # taken from the instruction stream, so its tree has no bound of its own. Refusing it has
+        # to reach the caller as an exception rather than as a write past the node array.
+        proc = self.run_in_subprocess(TRANSLATE_ONE, "JVM:BE:32:default", "ab")
+        assert proc.returncode == 0, proc.stderr
+        assert "BadDataError" in proc.stdout
+
+    def test_context_is_reusable_after_a_refusal(self):
+        # Refusing abandons a half-built tree in a cached ParserContext, so the Context has to
+        # stay usable: the refused address and the rest of its cache slot still decode, and
+        # asking for the refused instruction again reports the error rather than the partial tree.
+        proc = self.run_in_subprocess(REFUSE_THEN_REUSE, "JVM:BE:32:default", "ab", "00")
+        assert proc.returncode == 0, proc.stderr
+        assert proc.stdout.split() == ["BadDataError", "nop", "nop", "nop", "BadDataError"]
 
 
 class PrintingTests(TestCase):
