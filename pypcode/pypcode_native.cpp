@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_set>
@@ -258,7 +259,7 @@ enum TranslateFlags {
     BB_TERMINATING = 1,
 };
 
-class Context {
+class ContextState {
 public:
     SimpleLoadImage m_loader;
     ContextPypcode m_context_db;
@@ -267,9 +268,9 @@ public:
     Element *m_tags;
     std::unique_ptr<Sleigh> m_sleigh;
 
-    Context(const std::string &path)
+    ContextState(const std::string &path)
     {
-        LOG("Context %p created", this);
+        LOG("Context state %p created", this);
 
         // FIXME: Globals...
         AttributeId::initialize();
@@ -287,6 +288,31 @@ public:
         m_context_db.finalize();
     }
 
+    ~ContextState()
+    {
+        LOG("Context state %p released", this);
+    }
+
+    void reset(void)
+    {
+        // Translation and disassembly results contain pointers to address spaces
+        // owned by SleighBase.  Keep that base alive when resetting the per-program
+        // caches so previously returned results remain valid.
+        m_sleigh->reset(&m_loader, &m_context_db);
+        m_sleigh->initialize(m_document_storage);
+        m_context_db.finalize();
+    }
+};
+
+class Context {
+public:
+    std::shared_ptr<ContextState> m_state;
+
+    Context(const std::string &path) : m_state(std::make_shared<ContextState>(path))
+    {
+        LOG("Context %p created", this);
+    }
+
     ~Context()
     {
         LOG("Context %p released", this);
@@ -294,9 +320,7 @@ public:
 
     void reset(void)
     {
-        m_sleigh.reset(new Sleigh(&m_loader, &m_context_db));
-        m_sleigh->initialize(m_document_storage);
-        m_context_db.finalize();
+        m_state->reset();
     }
 
     std::unique_ptr<Disassembly>
@@ -307,12 +331,12 @@ public:
         int num_instructions = 0;
         uint32_t offset = 0;
 
-        m_sleigh->fastReset();
-        m_loader.setData(address, (const unsigned char *)bytes, num_bytes);
+        m_state->m_sleigh->fastReset();
+        m_state->m_loader.setData(address, (const unsigned char *)bytes, num_bytes);
         disassembly->m_instructions.reserve(10);
 
         while ((offset < num_bytes) && (!max_instructions || (num_instructions < max_instructions))) {
-            Address addr(m_sleigh->getDefaultCodeSpace(), address + offset);
+            Address addr(m_state->m_sleigh->getDefaultCodeSpace(), address + offset);
 
             disassembly->m_instructions.emplace_back();
             DisassemblyInstruction &ins = disassembly->m_instructions.back();
@@ -323,7 +347,7 @@ public:
             // instruction, suppress the error and return the successful disassembly. If the caller attempts
             // disassembly again at the position where the error occurred, then propagate the error.
             try {
-                ins.m_length = m_sleigh->printAssembly(asm_cache, addr);
+                ins.m_length = m_state->m_sleigh->printAssembly(asm_cache, addr);
             } catch (BadDataError &err) {
                 if (offset) {
                     disassembly->m_instructions.resize(num_instructions);
@@ -356,12 +380,12 @@ public:
         PcodeEmitCacher pcode_cache;
         uint32_t offset = 0;
 
-        m_sleigh->fastReset();
-        m_loader.setData(base_address, (const unsigned char *)bytes, num_bytes);
+        m_state->m_sleigh->fastReset();
+        m_state->m_loader.setData(base_address, (const unsigned char *)bytes, num_bytes);
 
         int num_instructions = 0;
         while ((offset < num_bytes) && (!max_instructions || (num_instructions < max_instructions))) {
-            Address addr(m_sleigh->getDefaultCodeSpace(), base_address + offset);
+            Address addr(m_state->m_sleigh->getDefaultCodeSpace(), base_address + offset);
             LOG("Lifting at 0x%lx+0x%x=0x%lx", base_address, offset, base_address + offset);
 
             int imark_idx = pcode_cache.m_ops.size();
@@ -372,7 +396,7 @@ public:
             // translation again at the position where the error occurred, then propagate the error.
             uint32_t num_bytes_decoded = 0;
             try {
-                num_bytes_decoded = m_sleigh->oneInstruction(pcode_cache, addr);
+                num_bytes_decoded = m_state->m_sleigh->oneInstruction(pcode_cache, addr);
             } catch (BadDataError &err) {
                 if (offset) {
                     pcode_cache.m_ops.resize(imark_idx);
@@ -396,7 +420,7 @@ public:
                 VarnodeData &imark_vn = imark_op.m_inputs.back();
                 imark_vn.space = addr.getSpace();
                 imark_vn.offset = addr.getOffset() + sum;
-                imark_vn.size = m_sleigh->instructionLength(addr + sum);
+                imark_vn.size = m_state->m_sleigh->instructionLength(addr + sum);
 
                 sum += imark_vn.size;
                 num_instructions++;
@@ -627,14 +651,27 @@ NB_MODULE(pypcode_native, m)
             "getAllRegisters",
             [](Context &t) {
                 map<VarnodeData, string> regmap;
-                t.m_sleigh->getAllRegisters(regmap);
-                return regmap;
+                t.m_state->m_sleigh->getAllRegisters(regmap);
+
+                nb::dict result;
+                for (const auto &[varnode_data, name] : regmap) {
+                    // A VarnodeData contains raw pointers into the translator.  Attach the complete backing state to
+                    // each Python copy so either the Varnode or one of its reference_internal children can safely
+                    // outlive the Context that produced it.
+                    nb::object varnode = nb::cast(varnode_data, nb::rv_policy::copy);
+                    nb::detail::keep_alive(
+                        varnode.ptr(), new std::shared_ptr<ContextState>(t.m_state), [](void *payload) noexcept {
+                            delete static_cast<std::shared_ptr<ContextState> *>(payload);
+                        });
+                    result[varnode] = nb::str(name.c_str());
+                }
+                return result;
             },
             "Get a mapping of all register locations to their corresponding names.")
         .def(
             "getRegisterName",
             [](Context &t, AddrSpace *space, uint64_t offset, uint32_t size) {
-                return t.m_sleigh->getRegisterName(space, offset, size);
+                return t.m_state->m_sleigh->getRegisterName(space, offset, size);
             },
             "space"_a,
             "offset"_a,
@@ -652,7 +689,9 @@ NB_MODULE(pypcode_native, m)
         .def("reset", &Context::reset, "Reset the context.")
         .def(
             "setVariableDefault",
-            [](Context &t, const std::string &name, uint32_t value) { t.m_context_db.setVariableDefault(name, value); },
+            [](Context &t, const std::string &name, uint32_t value) {
+                t.m_state->m_context_db.setVariableDefault(name, value);
+            },
             "name"_a,
             "value"_a,
             "Provide a default value for a context variable.")

@@ -2973,7 +2973,7 @@ with : lockprefx=0 {
 :CALL rm16      is $(LONGMODE_ON) & vexMode=0 & opsize=0 & byte=0xff; rm16 & reg_opcode=2 ...   { local dest:8 = inst_next + zext(rm16); push88(&:8 inst_next); call [dest]; }
 @endif
 
-:CALL rm32      is $(LONGMODE_OFF) & vexMode=0 & addrsize=0 & opsize=1 & byte=0xff; rm32 & reg_opcode=2 ...   { local dest:4 = rm32; push24(&:4 inst_next); call [dest]; }
+:CALL rm32      is $(LONGMODE_OFF) & vexMode=0 & addrsize=0 & opsize=1 & byte=0xff & currentCS; rm32 & reg_opcode=2 ...   { local dest:4 = segment(currentCS,rm32); push24(&:4 inst_next); call [dest]; }
 :CALL rm32      is $(LONGMODE_OFF) & vexMode=0 & addrsize=1 & opsize=1 & byte=0xff; rm32 & reg_opcode=2 ...   { local dest:4 = rm32; push44(&:4 inst_next); call [dest]; }
 @ifdef IA64
 :CALL rm64      is $(LONGMODE_ON) & vexMode=0 & (opsize=1 | opsize=2) & byte=0xff; rm64 & reg_opcode=2 ...   { local dest:8 = rm64; push88(&:8 inst_next); call [dest]; }
@@ -2984,15 +2984,20 @@ with : lockprefx=0 {
 :CALLF ptr1616      is vexMode=0 & addrsize=1 & opsize=0 & byte=0x9a; ptr1616           { push42(CS); build ptr1616; push42(&:2 inst_next); call ptr1616; }
 :CALLF ptr1632      is vexMode=0 & addrsize=0 & opsize=1 & byte=0x9a; ptr1632           { push22(CS); build ptr1632; push24(&:4 inst_next); call ptr1632; }
 :CALLF ptr1632      is vexMode=0 & addrsize=1 & opsize=1 & byte=0x9a; ptr1632           { pushseg44(CS); build ptr1632; push44(&:4 inst_next); call ptr1632; }
-:CALLF addr16       is vexMode=0 & addrsize=0 & opsize=0 & byte=0xff; addr16 & reg_opcode=3 ... { local ptr:$(SIZE) = segment(DS,addr16); local addrptr:$(SIZE) = segment(*:2 (ptr+2),*:2 ptr);
-                                                                                                  push22(CS); push22(&:2 inst_next); call [addrptr]; }
+:CALLF Mem          is vexMode=0 & addrsize=0 & opsize=0 & byte=0xff; Mem & reg_opcode=3 ... { local addrptr:$(SIZE) = segment(*:2 (Mem+2),*:2 Mem);
+                                                                                              push22(CS); push22(&:2 inst_next); call [addrptr]; }
 :CALLF addr32       is vexMode=0 & addrsize=1 & opsize=0 & byte=0xff; addr32 & reg_opcode=3 ... { local dest:4 = addr32; push42(CS); push42(&:2 inst_next); call [dest]; }
 @ifdef IA64
 :CALLF addr64       is $(LONGMODE_ON) & vexMode=0 & addrsize=2 & opsize=0 & byte=0xff; addr64 & reg_opcode=3 ... { local dest:8 = addr64; push82(CS); push82(&:2 inst_next); call [dest]; }
 @endif
 
 
-:CALLF addr16       is vexMode=0 & addrsize=0 & opsize=1 & byte=0xff; addr16 & reg_opcode=3 ... { local dest:2 = addr16; push22(CS); push24(&:4 inst_next); call [dest]; }
+:CALLF Mem          is vexMode=0 & addrsize=0 & opsize=1 & byte=0xff; Mem & reg_opcode=3 ... {
+    local addrptr:$(SIZE) = segment(*:2 (Mem+4), *:4 Mem);
+    push22(CS);
+    push24(&:4 inst_next);
+    call [addrptr];
+}
 :CALLF addr32       is vexMode=0 & addrsize=1 & opsize=1 & byte=0xff; addr32 & reg_opcode=3 ... { local dest:4 = addr32; pushseg44(CS); push44(&:4 inst_next); call [dest]; }
 @ifdef IA64
 :CALLF addr32       is $(LONGMODE_ON) &vexMode=0 & addrsize=1 & opsize=2 & byte=0xff; addr32 & reg_opcode=3 ... { local dest:4 = addr32; pushseg88(CS); push88(&:8 inst_next); call [dest]; }
@@ -3714,6 +3719,7 @@ enterFrames: low5 is low5 { tmp:1 = low5; export tmp; }
 
 :JMP rm16       is $(LONGMODE_OFF) & vexMode=0 & addrsize=0 & opsize=0 & byte=0xff & currentCS; rm16 & reg_opcode=4 ...	{ target:4 = segment(currentCS,rm16); goto [target]; }
 :JMP rm16       is $(LONGMODE_OFF) & vexMode=0 & addrsize=1 & opsize=0 & byte=0xff; rm16 & reg_opcode=4 ...	{ goto [rm16]; }
+:JMP rm32       is $(LONGMODE_OFF) & vexMode=0 & addrsize=0 & opsize=1 & byte=0xff & currentCS; rm32 & reg_opcode=4 ... { target:4 = segment(currentCS,rm32); goto [target]; }
 :JMP rm32       is $(LONGMODE_OFF) & vexMode=0 & addrsize=1 & opsize=1 & byte=0xff; rm32 & reg_opcode=4 ...    { goto [rm32]; }
 @ifdef IA64
 :JMP rm16       is $(LONGMODE_ON) & vexMode=0 & opsize=0 & byte=0xff & currentCS; rm16 & reg_opcode=4 ...	{ goto [rm16]; }
@@ -3722,13 +3728,12 @@ enterFrames: low5 is low5 { tmp:1 = low5; export tmp; }
 
 :JMPF ptr1616   is vexMode=0 & opsize=0 & byte=0xea; ptr1616                    { goto ptr1616; }
 :JMPF ptr1632   is vexMode=0 & opsize=1 & byte=0xea; ptr1632                    { goto ptr1632; }
-:JMPF Mem       is vexMode=0 & opsize=0 & byte=0xff; Mem & reg_opcode=5 ...     { target:$(SIZE) = zext(*:2 Mem); goto [target]; }
+:JMPF Mem       is vexMode=0 & opsize=0 & byte=0xff; Mem & reg_opcode=5 ...     {
+    target:$(SIZE) = segment(*:2 (Mem+2), *:2 Mem);
+    goto [target];
+}
 :JMPF Mem       is vexMode=0 & opsize=1 & byte=0xff; Mem & reg_opcode=5 ...     {
-@ifdef IA64
-    target:$(SIZE) = zext(*:4 Mem);
-@else
-    target:$(SIZE) = *:4 Mem;
-@endif
+    target:$(SIZE) = segment(*:2 (Mem+4), *:4 Mem);
     goto [target];
 }
 @ifdef IA64
@@ -4961,7 +4966,7 @@ define pcodeop xend;
 :XCHG Rmr64,Reg64   is $(LONGMODE_ON) & vexMode=0 & opsize=2 & byte=0x87; mod=3 & Rmr64 & Reg64        { local tmp = Rmr64; Rmr64 = Reg64; Reg64 = tmp; }
 @endif
 
-:XLAT seg16^BX      is vexMode=0 & addrsize=0 & seg16 & byte=0xd7; BX           { tmp:$(SIZE)= 0; ptr2(tmp,BX+zext(AL)); AL = *tmp; }
+:XLAT seg16^BX      is vexMode=0 & addrsize=0 & seg16 & byte=0xd7; BX           { tmp:$(SIZE) = segment(seg16,BX+zext(AL)); AL = *tmp; }
 :XLAT segWide^EBX     is vexMode=0 & addrsize=1 & segWide & byte=0xd7; EBX          { tmp:$(SIZE)= 0; ptr4(tmp,EBX+zext(AL)); AL = *tmp; }
 @ifdef IA64
 :XLAT segWide^RBX     is $(LONGMODE_ON) & vexMode=0 & addrsize=2 & segWide & byte=0xd7; RBX          { tmp:$(SIZE)= 0; ptr8(tmp,RBX+zext(AL)); AL = *tmp; }
@@ -5658,15 +5663,202 @@ define pcodeop ffree;
     FPUControlWord = m16; 
 }
 
+macro loadFpuStatusWord(address) {
+  FPUStatusWord = *:2 address;
+  C0 = FPUStatusWord[8,1];
+  C1 = FPUStatusWord[9,1];
+  C2 = FPUStatusWord[10,1];
+  C3 = FPUStatusWord[14,1];
+}
+
+macro loadFpuEnvironment16Protected(address) {
+  FPUControlWord        = *:2 (address);
+  loadFpuStatusWord(address + 2);
+  FPUTagWord            = *:2 (address +  4);
+  FPUInstructionPointer = zext(*:2 (address +  6));
+  FPUPointerSelector    = *:2 (address +  8);
+  FPUDataPointer        = zext(*:2 (address + 10));
+  FPUDataSelector       = *:2 (address + 12);
+}
+
+macro loadFpuEnvironment16Real(address) {
+  FPUControlWord = *:2 (address);
+  loadFpuStatusWord(address + 2);
+  FPUTagWord     = *:2 (address + 4);
+
+  local fipLow:2 = *:2 (address + 6);
+  local fipAndOpcode:2 = *:2 (address + 8);
+  FPUInstructionPointer = zext(fipLow) | (zext(fipAndOpcode & 0xf000) << 4);
+  FPULastInstructionOpcode = fipAndOpcode & 0x07ff;
+
+  local fdpLow:2 = *:2 (address + 10);
+  local fdpHigh:2 = *:2 (address + 12);
+  FPUDataPointer = zext(fdpLow) | (zext(fdpHigh & 0xf000) << 4);
+}
+
+macro loadFpuEnvironment32Protected(address) {
+  FPUControlWord           = *:2 (address);
+  loadFpuStatusWord(address + 4);
+  FPUTagWord               = *:2 (address +  8);
+  FPUInstructionPointer    = zext(*:4 (address + 12));
+  FPUPointerSelector       = *:2 (address + 16);
+  FPULastInstructionOpcode = *:2 (address + 18) & 0x07ff;
+  FPUDataPointer           = zext(*:4 (address + 20));
+  FPUDataSelector          = *:2 (address + 24);
+}
+
+macro loadFpuEnvironment32Real(address) {
+  FPUControlWord = *:2 (address);
+  loadFpuStatusWord(address + 4);
+  FPUTagWord     = *:2 (address + 8);
+
+  local fipLow:2 = *:2 (address + 12);
+  local fipAndOpcode:4 = *:4 (address + 16);
+  local fip:4 = zext(fipLow) | ((fipAndOpcode & 0x0ffff000) << 4);
+  FPUInstructionPointer = zext(fip);
+  FPULastInstructionOpcode = fipAndOpcode:2 & 0x07ff;
+
+  local fdpLow:2 = *:2 (address + 20);
+  local fdpHigh:4 = *:4 (address + 24);
+  local fdp:4 = zext(fdpLow) | ((fdpHigh & 0x0ffff000) << 4);
+  FPUDataPointer = zext(fdp);
+}
+
+macro storeFpuEnvironment16Protected(address) {
+  *:2 (address)      = FPUControlWord;
+  *:2 (address +  2) = FPUStatusWord;
+  *:2 (address +  4) = FPUTagWord;
+  *:2 (address +  6) = FPUInstructionPointer:2;
+  *:2 (address +  8) = FPUPointerSelector;
+  *:2 (address + 10) = FPUDataPointer:2;
+  *:2 (address + 12) = FPUDataSelector;
+}
+
+macro storeFpuEnvironment16Real(address) {
+  *:2 (address)     = FPUControlWord;
+  *:2 (address + 2) = FPUStatusWord;
+  *:2 (address + 4) = FPUTagWord;
+
+  local fip:4 = FPUInstructionPointer:4;
+  local fipAndOpcode:4 = ((fip >> 4) & 0xf000) | zext(FPULastInstructionOpcode & 0x07ff);
+  *:2 (address + 6) = fip:2;
+  *:2 (address + 8) = fipAndOpcode:2;
+
+  local fdp:4 = FPUDataPointer:4;
+  local fdpHigh:4 = (fdp >> 4) & 0xf000;
+  *:2 (address + 10) = fdp:2;
+  *:2 (address + 12) = fdpHigh:2;
+}
+
+macro storeFpuEnvironment32Protected(address) {
+  *:2 (address)      = FPUControlWord;
+  *:2 (address +  4) = FPUStatusWord;
+  *:2 (address +  8) = FPUTagWord;
+  *:4 (address + 12) = FPUInstructionPointer:4;
+  *:2 (address + 16) = FPUPointerSelector;
+  *:2 (address + 18) = FPULastInstructionOpcode & 0x07ff;
+  *:4 (address + 20) = FPUDataPointer:4;
+  *:2 (address + 24) = FPUDataSelector;
+}
+
+macro storeFpuEnvironment32Real(address) {
+  *:2 (address)     = FPUControlWord;
+  *:2 (address + 4) = FPUStatusWord;
+  *:2 (address + 8) = FPUTagWord;
+
+  local fip:4 = FPUInstructionPointer:4;
+  local fipAndOpcode:4 = ((fip >> 4) & 0x0ffff000) | zext(FPULastInstructionOpcode & 0x07ff);
+  *:2 (address + 12) = fip:2;
+  *:4 (address + 16) = fipAndOpcode;
+
+  local fdp:4 = FPUDataPointer:4;
+  local fdpHigh:4 = (fdp >> 4) & 0x0ffff000;
+  *:2 (address + 20) = fdp:2;
+  *:4 (address + 24) = fdpHigh;
+}
+
+macro loadFpuStack16(address) {
+  ST0 = *:10 (address + 14);
+  ST1 = *:10 (address + 24);
+  ST2 = *:10 (address + 34);
+  ST3 = *:10 (address + 44);
+  ST4 = *:10 (address + 54);
+  ST5 = *:10 (address + 64);
+  ST6 = *:10 (address + 74);
+  ST7 = *:10 (address + 84);
+}
+
+macro loadFpuStack32(address) {
+  ST0 = *:10 (address + 28);
+  ST1 = *:10 (address + 38);
+  ST2 = *:10 (address + 48);
+  ST3 = *:10 (address + 58);
+  ST4 = *:10 (address + 68);
+  ST5 = *:10 (address + 78);
+  ST6 = *:10 (address + 88);
+  ST7 = *:10 (address + 98);
+}
+
+macro storeFpuStack16(address) {
+  *:10 (address + 14) = ST0;
+  *:10 (address + 24) = ST1;
+  *:10 (address + 34) = ST2;
+  *:10 (address + 44) = ST3;
+  *:10 (address + 54) = ST4;
+  *:10 (address + 64) = ST5;
+  *:10 (address + 74) = ST6;
+  *:10 (address + 84) = ST7;
+}
+
+macro storeFpuStack32(address) {
+  *:10 (address + 28) = ST0;
+  *:10 (address + 38) = ST1;
+  *:10 (address + 48) = ST2;
+  *:10 (address + 58) = ST3;
+  *:10 (address + 68) = ST4;
+  *:10 (address + 78) = ST5;
+  *:10 (address + 88) = ST6;
+  *:10 (address + 98) = ST7;
+}
+
+macro initializeFpuState() {
+  FPUControlWord = 0x037f;
+  FPUStatusWord = 0x0000;
+  C0 = 0;
+  C1 = 0;
+  C2 = 0;
+  C3 = 0;
+  FPUTagWord = 0xffff;
+  FPUDataPointer = 0x00000000;
+  FPUInstructionPointer = 0x00000000;
+  FPULastInstructionOpcode = 0x0000;
+  FPUPointerSelector = 0x0000;
+  FPUDataSelector = 0x0000;
+}
+
+macro maskFpuExceptions() {
+  FPUControlWord = FPUControlWord | 0x003f;
+}
+
 define pcodeop fldenv;
-:FLDENV Mem     is vexMode=0 & byte=0xD9; (mod != 0b11 & reg_opcode=4) ... & Mem
+:FLDENV Mem     is vexMode=0 & opsize=0 & protectedMode=1 & byte=0xD9; (mod != 0b11 & reg_opcode=4) ... & Mem
 {
-  FPUControlWord           = *:2 (Mem);
-  FPUStatusWord            = *:2 (Mem +  4);
-  FPUTagWord               = *:2 (Mem +  8);
-  FPUDataPointer           = *:4 (Mem + 20);
-  FPUInstructionPointer    = *:4 (Mem + 12);
-  FPULastInstructionOpcode = *:2 (Mem + 18);
+  loadFpuEnvironment16Protected(Mem);
+}
+
+:FLDENV Mem     is vexMode=0 & opsize=0 & protectedMode=0 & byte=0xD9; (mod != 0b11 & reg_opcode=4) ... & Mem
+{
+  loadFpuEnvironment16Real(Mem);
+}
+
+:FLDENV Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=1 & byte=0xD9; (mod != 0b11 & reg_opcode=4) ... & Mem
+{
+  loadFpuEnvironment32Protected(Mem);
+}
+
+:FLDENV Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=0 & byte=0xD9; (mod != 0b11 & reg_opcode=4) ... & Mem
+{
+  loadFpuEnvironment32Real(Mem);
 }
 
 :FMUL m32fp       is vexMode=0 & byte=0xD8; reg_opcode=1 ... & m32fp
@@ -5765,75 +5957,84 @@ define pcodeop fptan;
     ST0 = tmp; 
 }
 
-:FRSTOR Mem     is vexMode=0 & byte=0xDD; reg_opcode=4 ... & Mem
+:FRSTOR Mem     is vexMode=0 & opsize=0 & protectedMode=1 & byte=0xDD; reg_opcode=4 ... & Mem
 {
-  FPUControlWord           = *:2  (Mem);
-  FPUStatusWord            = *:2  (Mem +  4);
-  FPUTagWord               = *:2  (Mem +  8);
-  FPUDataPointer           = *:4  (Mem + 20);
-  FPUInstructionPointer    = *:4  (Mem + 12);
-  FPULastInstructionOpcode = *:2  (Mem + 18);
-
-  ST0                      = *:10 (Mem + 28);
-  ST1                      = *:10 (Mem + 38);
-  ST2                      = *:10 (Mem + 48);
-  ST3                      = *:10 (Mem + 58);
-  ST4                      = *:10 (Mem + 68);
-  ST5                      = *:10 (Mem + 78);
-  ST6                      = *:10 (Mem + 88);
-  ST7                      = *:10 (Mem + 98);
+  loadFpuEnvironment16Protected(Mem);
+  loadFpuStack16(Mem);
 }
 
-:FSAVE Mem      is vexMode=0 & byte=0x9B; byte=0xDD; reg_opcode=6 ... & Mem
+:FRSTOR Mem     is vexMode=0 & opsize=0 & protectedMode=0 & byte=0xDD; reg_opcode=4 ... & Mem
 {
-  *:2  (Mem)      = FPUControlWord;
-  *:2  (Mem +  4) = FPUStatusWord;
-  *:2  (Mem +  8) = FPUTagWord;
-  *:4  (Mem + 20) = FPUDataPointer;
-  *:4  (Mem + 12) = FPUInstructionPointer;
-  *:2  (Mem + 18) = FPULastInstructionOpcode;
-
-  *:10 (Mem + 28) = ST0;
-  *:10 (Mem + 38) = ST1;
-  *:10 (Mem + 48) = ST2;
-  *:10 (Mem + 58) = ST3;
-  *:10 (Mem + 68) = ST4;
-  *:10 (Mem + 78) = ST5;
-  *:10 (Mem + 88) = ST6;
-  *:10 (Mem + 98) = ST7;
-
-  FPUControlWord = 0x037f;
-  FPUStatusWord = 0x0000;
-  FPUTagWord = 0xffff;
-  FPUDataPointer = 0x00000000;
-  FPUInstructionPointer = 0x00000000;
-  FPULastInstructionOpcode = 0x0000;
+  loadFpuEnvironment16Real(Mem);
+  loadFpuStack16(Mem);
 }
 
-:FNSAVE Mem     is vexMode=0 & byte=0xDD; reg_opcode=6 ... & Mem
+:FRSTOR Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=1 & byte=0xDD; reg_opcode=4 ... & Mem
 {
-  *:2  (Mem)      = FPUControlWord;
-  *:2  (Mem +  4) = FPUStatusWord;
-  *:2  (Mem +  8) = FPUTagWord;
-  *:4  (Mem + 20) = FPUDataPointer;
-  *:4  (Mem + 12) = FPUInstructionPointer;
-  *:2  (Mem + 18) = FPULastInstructionOpcode;
+  loadFpuEnvironment32Protected(Mem);
+  loadFpuStack32(Mem);
+}
 
-  *:10 (Mem + 28) = ST0;
-  *:10 (Mem + 38) = ST1;
-  *:10 (Mem + 48) = ST2;
-  *:10 (Mem + 58) = ST3;
-  *:10 (Mem + 68) = ST4;
-  *:10 (Mem + 78) = ST5;
-  *:10 (Mem + 88) = ST6;
-  *:10 (Mem + 98) = ST7;
+:FRSTOR Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=0 & byte=0xDD; reg_opcode=4 ... & Mem
+{
+  loadFpuEnvironment32Real(Mem);
+  loadFpuStack32(Mem);
+}
 
-  FPUControlWord = 0x037f;
-  FPUStatusWord = 0x0000;
-  FPUTagWord = 0xffff;
-  FPUDataPointer = 0x00000000;
-  FPUInstructionPointer = 0x00000000;
-  FPULastInstructionOpcode = 0x0000;
+:FSAVE Mem      is vexMode=0 & opsize=0 & protectedMode=1 & byte=0x9B; byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment16Protected(Mem);
+  storeFpuStack16(Mem);
+  initializeFpuState();
+}
+
+:FSAVE Mem      is vexMode=0 & opsize=0 & protectedMode=0 & byte=0x9B; byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment16Real(Mem);
+  storeFpuStack16(Mem);
+  initializeFpuState();
+}
+
+:FSAVE Mem      is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=1 & byte=0x9B; byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment32Protected(Mem);
+  storeFpuStack32(Mem);
+  initializeFpuState();
+}
+
+:FSAVE Mem      is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=0 & byte=0x9B; byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment32Real(Mem);
+  storeFpuStack32(Mem);
+  initializeFpuState();
+}
+
+:FNSAVE Mem     is vexMode=0 & opsize=0 & protectedMode=1 & byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment16Protected(Mem);
+  storeFpuStack16(Mem);
+  initializeFpuState();
+}
+
+:FNSAVE Mem     is vexMode=0 & opsize=0 & protectedMode=0 & byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment16Real(Mem);
+  storeFpuStack16(Mem);
+  initializeFpuState();
+}
+
+:FNSAVE Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=1 & byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment32Protected(Mem);
+  storeFpuStack32(Mem);
+  initializeFpuState();
+}
+
+:FNSAVE Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=0 & byte=0xDD; reg_opcode=6 ... & Mem
+{
+  storeFpuEnvironment32Real(Mem);
+  storeFpuStack32(Mem);
+  initializeFpuState();
 }
 
 define pcodeop fscale;
@@ -5918,24 +6119,52 @@ define pcodeop fsin;
     m16 = FPUControlWord; 
 }
 
-:FSTENV Mem     is vexMode=0 & byte=0x9B; byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+:FSTENV Mem     is vexMode=0 & opsize=0 & protectedMode=1 & byte=0x9B; byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
 {
-  *:2  (Mem)      = FPUControlWord;
-  *:2  (Mem +  4) = FPUStatusWord;
-  *:2  (Mem +  8) = FPUTagWord;
-  *:4  (Mem + 20) = FPUDataPointer;
-  *:4  (Mem + 12) = FPUInstructionPointer;
-  *:2  (Mem + 18) = FPULastInstructionOpcode;
+  storeFpuEnvironment16Protected(Mem);
+  maskFpuExceptions();
 }
 
-:FNSTENV Mem    is vexMode=0 & byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+:FSTENV Mem     is vexMode=0 & opsize=0 & protectedMode=0 & byte=0x9B; byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
 {
-  *:2  (Mem)      = FPUControlWord;
-  *:2  (Mem +  4) = FPUStatusWord;
-  *:2  (Mem +  8) = FPUTagWord;
-  *:4  (Mem + 20) = FPUDataPointer;
-  *:4  (Mem + 12) = FPUInstructionPointer;
-  *:2  (Mem + 18) = FPULastInstructionOpcode;
+  storeFpuEnvironment16Real(Mem);
+  maskFpuExceptions();
+}
+
+:FSTENV Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=1 & byte=0x9B; byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+{
+  storeFpuEnvironment32Protected(Mem);
+  maskFpuExceptions();
+}
+
+:FSTENV Mem     is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=0 & byte=0x9B; byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+{
+  storeFpuEnvironment32Real(Mem);
+  maskFpuExceptions();
+}
+
+:FNSTENV Mem    is vexMode=0 & opsize=0 & protectedMode=1 & byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+{
+  storeFpuEnvironment16Protected(Mem);
+  maskFpuExceptions();
+}
+
+:FNSTENV Mem    is vexMode=0 & opsize=0 & protectedMode=0 & byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+{
+  storeFpuEnvironment16Real(Mem);
+  maskFpuExceptions();
+}
+
+:FNSTENV Mem    is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=1 & byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+{
+  storeFpuEnvironment32Protected(Mem);
+  maskFpuExceptions();
+}
+
+:FNSTENV Mem    is vexMode=0 & (opsize=1 | opsize=2) & protectedMode=0 & byte=0xD9; (mod != 0b11 & reg_opcode=6) ... & Mem
+{
+  storeFpuEnvironment32Real(Mem);
+  maskFpuExceptions();
 }
 
 :FSTSW m16      is vexMode=0 & byte=0x9B; byte=0xDD; reg_opcode=7 ... & m16     
