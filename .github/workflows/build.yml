@@ -78,6 +78,29 @@ jobs:
           name: ${{ matrix.py }}-${{ matrix.platform.wheel_tag }}
           path: ./wheelhouse/*.whl
 
+  build_pyodide:
+    name: Build Pyodide wheel
+    needs: build_sdist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download source distribution
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: source
+      - name: Unpack source distribution
+        run: tar --strip-components 1 -xvf *.tar.gz
+      - name: Build and test wheel
+        uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
+        env:
+          CIBW_PLATFORM: pyodide
+          CIBW_BUILD: cp314-pyodide_wasm32
+          CIBW_TEST_COMMAND: >-
+            python -c "import pypcode; assert pypcode.Context('x86:LE:64:default').translate(b'\xc3').ops"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cp314-pyodide_wasm32
+          path: ./wheelhouse/*.whl
+
   build_docs:
     name: Build docs
     runs-on: ubuntu-latest
@@ -152,7 +175,7 @@ jobs:
 
   upload_pypi:
     name: Upload wheels to PyPI
-    needs: [lint, build_docs, build_sdist, build_wheels, upload_coverage]
+    needs: [lint, build_docs, build_sdist, build_wheels, build_pyodide, upload_coverage]
     environment:
       name: pypi
       url: https://pypi.org/p/pypcode

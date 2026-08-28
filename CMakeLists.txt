@@ -1,21 +1,27 @@
 cmake_minimum_required(VERSION 3.18...3.22)
 project(pypcode)
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.14)
+
+option(PYPCODE_BUILD_EXTENSION "Build the Python extension" ON)
+option(PYPCODE_BUILD_SLEIGH "Build the SLEIGH compiler" ON)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-# Detect the installed nanobind package and import it into CMake
-execute_process(
-  COMMAND "${Python_EXECUTABLE}" -c "import nanobind; print(nanobind.cmake_dir())"
-  OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
-list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
-find_package(nanobind CONFIG REQUIRED)
+if(PYPCODE_BUILD_EXTENSION)
+  find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+
+  # Detect the installed nanobind package and import it into CMake
+  execute_process(
+    COMMAND "${Python_EXECUTABLE}" -c "import nanobind; print(nanobind.cmake_dir())"
+    OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
+  list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
+  find_package(nanobind CONFIG REQUIRED)
+endif()
 
 if(MSVC)
   add_compile_options(/O2 /D_HAS_STD_BYTE=0 /DLOCAL_ZLIB=1 /DNO_GZIP=1)
@@ -58,27 +64,31 @@ set(SLEIGH_COMMON
   pypcode/sleigh/xml.cc
   )
 
-add_executable(sleigh
-  pypcode/sleigh/filemanage.cc
-  pypcode/sleigh/slgh_compile.cc
-  pypcode/sleigh/slghparse.cc
-  pypcode/sleigh/slghscan.cc
-  ${SLEIGH_COMMON}
-  ${ZLIB}
-  )
-install(TARGETS sleigh DESTINATION bin)
-
-nanobind_add_module(pypcode_native
-  pypcode/pypcode_native.cpp
-  ${SLEIGH_COMMON}
-  ${ZLIB}
-  )
-
-if(DEFINED ENV{COVERAGE} AND NOT "$ENV{COVERAGE}" STREQUAL "")
-  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(pypcode_native PRIVATE --coverage -O0 -g)
-    target_link_options(pypcode_native PRIVATE --coverage -O0 -g)
-  endif()
+if(PYPCODE_BUILD_SLEIGH)
+  add_executable(sleigh
+    pypcode/sleigh/filemanage.cc
+    pypcode/sleigh/slgh_compile.cc
+    pypcode/sleigh/slghparse.cc
+    pypcode/sleigh/slghscan.cc
+    ${SLEIGH_COMMON}
+    ${ZLIB}
+    )
+  install(TARGETS sleigh DESTINATION bin)
 endif()
 
-install(TARGETS pypcode_native DESTINATION .)
+if(PYPCODE_BUILD_EXTENSION)
+  nanobind_add_module(pypcode_native
+    pypcode/pypcode_native.cpp
+    ${SLEIGH_COMMON}
+    ${ZLIB}
+    )
+
+  if(DEFINED ENV{COVERAGE} AND NOT "$ENV{COVERAGE}" STREQUAL "")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(pypcode_native PRIVATE --coverage -O0 -g)
+      target_link_options(pypcode_native PRIVATE --coverage -O0 -g)
+    endif()
+  endif()
+
+  install(TARGETS pypcode_native DESTINATION .)
+endif()
