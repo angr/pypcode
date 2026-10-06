@@ -3,9 +3,9 @@
 
 import gc
 import logging
-from unittest import main, TestCase
-from unittest.mock import create_autospec
 from typing import cast
+from unittest import TestCase, main
+from unittest.mock import create_autospec
 
 from pypcode import (
     AddrSpace,

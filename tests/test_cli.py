@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # pylint:disable=no-self-use
 
-import unittest
 import base64
-import tempfile
-import sys
-import os
 import io
+import os
+import sys
+import tempfile
+import unittest
 from unittest import mock
 
 from pypcode.__main__ import main

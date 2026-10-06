@@ -15,10 +15,9 @@ import pickle
 import random
 import sys
 import time
-from dataclasses import dataclass
-
-from typing import cast, Any
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
+from typing import Any, cast
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
