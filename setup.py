@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import json
 import os
-from pathlib import Path
 import platform
 import shutil
 import struct
 import subprocess
 import sys
+from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_ext import build_ext

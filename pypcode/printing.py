@@ -18,7 +18,7 @@ class OpFormat:
     @staticmethod
     def fmt_vn(vn: Varnode) -> str:
         if vn.space.name == "const":
-            return "%#x" % vn.offset
+            return f"{vn.offset:#x}"
         elif vn.space.name == "register":
             name = vn.getRegisterName()
             if name:

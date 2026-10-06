@@ -66,7 +66,7 @@ def main():
             print("\nSuggestions:")
             for langid in sorted(suggestions):
                 print("  %-35s - %s" % (langid, langs[langid].description))
-            print("")
+            print()
         print("Try `--list` for full list of architectures.")
         sys.exit(1)
 
@@ -94,7 +94,7 @@ def main():
                 print(ctx.disassemble(disas_slice, disas_addr))
             else:
                 print(f" {i - last_imark_idx - 1:3d}: {op}")
-        print("")
+        print()
     except (BadDataError, UnimplError) as e:
         print(f"An error occurred during translation: {e}")
         sys.exit(1)

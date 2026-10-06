@@ -3,34 +3,17 @@ Pythonic interface to SLEIGH
 """
 
 from __future__ import annotations
+
 import os.path
 import xml.etree.ElementTree as ET
+from collections.abc import Generator, Mapping, Sequence
 from enum import IntEnum
 from typing import cast
-from collections.abc import Generator, Sequence, Mapping
 
 from .__version__ import __version__
-
 from .pypcode_native import __version__ as __pypcode_native_version__  # pylint:disable=no-name-in-module
 
 assert __version__ == __pypcode_native_version__
-
-from .pypcode_native import (  # pylint:disable=no-name-in-module
-    Address,
-    AddrSpace,
-    BadDataError,
-    DecoderError,
-    Disassembly,
-    Instruction,
-    LowlevelError,
-    OpCode,
-    PcodeOp,
-    TRANSLATE_FLAGS_BB_TERMINATING,
-    Translation,
-    UnimplError,
-    Varnode,
-)
-from .pypcode_native import Context as _Context  # pylint:disable=no-name-in-module
 
 from .printing import (
     OpFormat,
@@ -40,10 +23,26 @@ from .printing import (
     OpFormatUnary,
     PcodePrettyPrinter,
 )
+from .pypcode_native import (  # pylint:disable=no-name-in-module
+    TRANSLATE_FLAGS_BB_TERMINATING,
+    Address,
+    AddrSpace,
+    BadDataError,
+    DecoderError,
+    Disassembly,
+    Instruction,
+    LowlevelError,
+    OpCode,
+    PcodeOp,
+    Translation,
+    UnimplError,
+    Varnode,
+)
+from .pypcode_native import Context as _Context  # pylint:disable=no-name-in-module
 
 __all__ = [
-    "Address",
     "AddrSpace",
+    "Address",
     "Arch",
     "ArchLanguage",
     "BadDataError",
@@ -85,10 +84,10 @@ class ArchLanguage:
     """
 
     __slots__ = (
+        "_cspecs",
+        "_pspec",
         "archdir",
         "ldef",
-        "_pspec",
-        "_cspecs",
     )
 
     archdir: str
@@ -167,11 +166,11 @@ class Arch:
     """
 
     __slots__ = (
-        "archpath",
         "archname",
-        "ldefpath",
-        "ldef",
+        "archpath",
         "languages",
+        "ldef",
+        "ldefpath",
     )
 
     archpath: str
