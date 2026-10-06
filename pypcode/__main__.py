@@ -52,7 +52,7 @@ def main():
     langs = {lang.id: lang for arch in Arch.enumerate() for lang in arch.languages}
     if ("-l" in sys.argv) or ("--list" in sys.argv):
         for langid in sorted(langs):
-            print("%-35s - %s" % (langid, langs[langid].description))
+            print(f"{langid:<35} - {langs[langid].description}")
         return
 
     args = ap.parse_args()
@@ -65,7 +65,7 @@ def main():
         if len(suggestions):
             print("\nSuggestions:")
             for langid in sorted(suggestions):
-                print("  %-35s - %s" % (langid, langs[langid].description))
+                print(f"  {langid:<35} - {langs[langid].description}")
             print()
         print("Try `--list` for full list of architectures.")
         sys.exit(1)
