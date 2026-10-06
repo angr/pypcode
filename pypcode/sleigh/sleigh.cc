@@ -453,7 +453,12 @@ void DisassemblyCache::initialize(int4 min,int4 hashsize)
   hashtable = new ParserContext *[hashsize];
   for(int4 i=0;i<minimumreuse;++i) {
     ParserContext *pos = new ParserContext(contextcache,translate);
-    pos->initialize(75,20,constspace);
+    // A register list is spelled out as one Constructor per register in several languages, so the
+    // node count runs well past the handful an ordinary instruction needs: ARM vldmia with 31
+    // single-precision registers takes 109 nodes, and the largest tree seen across the shipped
+    // languages is an NDS32 register-list instruction at 120.  512 keeps several times that in
+    // reserve, for about 140KB per cached parse tree.
+    pos->initialize(512,20,constspace);
     list[i] = pos;
   }
   ParserContext *pos = list[0];

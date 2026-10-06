@@ -46,6 +46,15 @@ void ParserContext::initialize(int4 maxstate,int4 maxparam,AddrSpace *spc)
   base_state = &state[0];
 }
 
+void ParserContext::parseTreeOverflow(const string &msg) const
+
+{				// The node array and the walker's breadcrumb trail are allocated
+				// once and cannot grow, so an instruction needing a bigger parse
+				// tree than they hold is bad data.  Out of line because
+				// BadDataError is not declared in context.hh
+  throw BadDataError(msg);
+}
+
 const Address &ParserContext::getN2addr(void) const
 
 {
@@ -218,6 +227,18 @@ void ParserWalker::setOutOfBandState(Constructor *ct,int4 index,ConstructState *
   point = tempstate;
   depth = 0;
   breadcrumb[0] = 0;
+}
+
+void ParserWalkerChange::setConstructor(Constructor *c)
+
+{				// Give the node room for every operand the Constructor declares.
+				// A few Constructors, such as the PowerPC AltiVec ones that name
+				// one operand per vector lane, declare more than the allotment
+				// ParserContext::initialize hands out
+  point->ct = c;
+  int4 numoper = c->getNumOperands();
+  if (numoper > (int4)point->resolve.size())
+    point->resolve.resize(numoper);
 }
 
 void ParserWalkerChange::calcCurrentLength(int4 length,int4 numopers)
