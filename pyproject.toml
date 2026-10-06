@@ -51,6 +51,9 @@ target-version = ['py312']
 
 [tool.ruff]
 line-length = 120
+extend-exclude = ["pypcode/processors"]
+
+[tool.ruff.lint]
 extend-ignore = [
 	"E402", # Bottom imports
 ]
