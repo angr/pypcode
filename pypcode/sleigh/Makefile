@@ -411,7 +411,3 @@ reallyclean:	clean
 	rm -rf coreext_*.cc coreext_*.hh ghidraext_*.cc ghidraext_*.hh consoleext_*.cc consoleext_*.hh
 	rm -rf com_dbg com_opt test_dbg ghi_dbg ghi_opt sla_dbg sla_opt
 	rm -f $(EXECS) TAGS *~
-
-sleigh_src:
-	mkdir -p sleigh_src
-	cp $(LIBSLA_SOURCE) Makefile sleigh_src
