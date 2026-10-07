@@ -8,16 +8,20 @@ git clone --depth=1 -b Ghidra_${TAG}_build https://github.com/NationalSecurityAg
 
 # We just need Makefile and $(LIBSLA_SOURCE) defined inside Makefile. Do it this
 # way to make sure we stay up to date with the list of required files.
-SLEIGH_SRC_DIR=sleigh
+#
+# Only evaluate the variable; don't build anything. Ghidra ships the bison/flex
+# generated sources checked in and does not regenerate them during its build, so
+# copy them as-is. DEPNAMES= skips including the depend files, which would
+# otherwise cause make to regenerate parsers depending on checkout timestamps.
+SLEIGH_SRC_DIR=${PWD}/sleigh
 pushd ${GHIDRA_SRC_DIR}/Ghidra/Features/Decompiler/src/decompile/cpp/
-
-# Touch fake dependency files recently removed upstream. Not having these triggers build steps.
-mkdir -p com_opt com_dbg
-touch com_opt/depend com_dbg/depend
-
-echo -e "$SLEIGH_SRC_DIR:\n\tmkdir -p $SLEIGH_SRC_DIR\n\tcp \$(LIBSLA_SOURCE) Makefile $SLEIGH_SRC_DIR" >> Makefile
-make $SLEIGH_SRC_DIR
-SLEIGH_SRC_DIR=${PWD}/${SLEIGH_SRC_DIR}
+LIBSLA_SOURCE=$(make -s --no-print-directory -f Makefile -f - print-libsla-source DEPNAMES= <<'EOF'
+print-libsla-source:
+	@echo $(LIBSLA_SOURCE)
+EOF
+)
+mkdir -p ${SLEIGH_SRC_DIR}
+cp ${LIBSLA_SOURCE} Makefile ${SLEIGH_SRC_DIR}
 popd
 
 mkdir ${TAG}
