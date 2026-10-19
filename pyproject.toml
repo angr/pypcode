@@ -25,7 +25,7 @@ docs = [
     "ipython",
     "myst-parser",
     "sphinx",
-    "sphinx-autodoc-typehints<=3.17.1",  # XXX: Docs broken in 3.17.2
+    "sphinx-autodoc-typehints<=3.13.9",
 ]
 testing = [
     "pytest",
