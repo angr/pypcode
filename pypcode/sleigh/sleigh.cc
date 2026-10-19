@@ -365,13 +365,37 @@ void SleighBuilder::appendBuild(OpTpl *bld,int4 secnum)
   walker->popOperand();
 }
 
+/// \brief Restore a SleighBuilder's walker and unique offset when the enclosing scope exits
+///
+/// A delay slot or a CROSSBUILD is built through a ParserWalker that lives on the stack frame of
+/// the builder method, so the builder must point back at its original walker before that frame
+/// goes away, including when the nested build throws.  Otherwise Sleigh::oneInstruction reports
+/// the failure through a walker that no longer exists.
+class WalkerScope {
+  ParserWalker *&curwalker;		///< The builder's current walker
+  uintb &curuniqueoffset;		///< The builder's current unique offset
+  ParserWalker *oldwalker;		///< The walker in use when this scope was entered
+  uintb olduniqueoffset;		///< The unique offset in use when this scope was entered
+public:
+  /// Record the walker and unique offset to put back
+  WalkerScope(ParserWalker *&w,uintb &off) : curwalker(w), curuniqueoffset(off) {
+    oldwalker = w;
+    olduniqueoffset = off;
+  }
+  /// Put back the recorded walker and unique offset
+  ~WalkerScope(void) {
+    curwalker = oldwalker;
+    curuniqueoffset = olduniqueoffset;
+  }
+};
+
 void SleighBuilder::delaySlot(OpTpl *op)
 
 {
   // Append pcode for an entire instruction (delay slot)
   // in the middle of the current instruction
   ParserWalker *tmp = walker;
-  uintb olduniqueoffset = uniqueoffset;
+  WalkerScope scope(walker,uniqueoffset);	// Restore original context on every exit
 
   Address baseaddr = tmp->getAddr();
   int4 fallOffset = tmp->getLength();
@@ -392,8 +416,6 @@ void SleighBuilder::delaySlot(OpTpl *op)
     fallOffset += len;
     bytecount += len;
   } while(bytecount < delaySlotByteCnt);
-  walker = tmp;			// Restore original context
-  uniqueoffset = olduniqueoffset;
 }
 
 void SleighBuilder::setLabel(OpTpl *op)
@@ -416,7 +438,7 @@ void SleighBuilder::appendCrossBuild(OpTpl *bld,int4 secnum)
   uintb addr = spc->wrapOffset( vn->getOffset().fix(*walker) );
 
   ParserWalker *tmp = walker;
-  uintb olduniqueoffset = uniqueoffset;
+  WalkerScope scope(walker,uniqueoffset);	// Restore original context on every exit
 
   Address newaddr(spc,addr);
   setUniqueOffset(newaddr);
@@ -434,8 +456,6 @@ void SleighBuilder::appendCrossBuild(OpTpl *bld,int4 secnum)
     buildEmpty(ct,secnum);
   else
     build(construct,secnum);
-  walker = tmp;
-  uniqueoffset = olduniqueoffset;
 }
 
 /// \param min is the minimum number of allocations before a reuse is expected
