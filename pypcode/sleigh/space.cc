@@ -290,7 +290,7 @@ uintb AddrSpace::read(const string &s,int4 &size) const
     }
   }
   catch(LowlevelError &err) {	// Name doesn't exist
-    offset = strtoul(s.c_str(),&tmpdata,0);
+    offset = strtoull(s.c_str(),&tmpdata,0);
     offset = addressToByte(offset,wordsize);
     enddata = (const char *) tmpdata;
     if (enddata - s.c_str() == s.size()) { // If no size or offset override
