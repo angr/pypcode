@@ -247,6 +247,30 @@ class TranslateTests(TestCase):
         tx = ctx.translate(b"\xd0\x00\xa8\x00")  # and r0, r0; unimpl
         assert len(get_imarks(tx)) == 1
 
+    def test_delay_slot_unimpl_failure(self):
+        # The delay slot is built through a walker owned by SleighBuilder::delaySlot, and the
+        # error is reported through the builder's walker once that frame is gone.
+        for lang, insns in [
+            ("Toy:BE:32:default", b"\xf5\x00\xa8\x00"),  # callds 0x0; unimpl
+            ("sparc:BE:32:default", b"\x63\x74\x85\x96\xa7\xb8\xc9\xda"),  # call; unimpl
+        ]:
+            with self.subTest(lang=lang):
+                ctx = Context(lang)
+                with self.assertRaises(UnimplError) as ctxmgr:
+                    ctx.translate(insns)
+                # The branch is reported, not the instruction in its delay slot.
+                assert "0x00000000" in str(ctxmgr.exception)
+
+    def test_partial_delay_slot_unimpl_failure(self):
+        for lang, insns in [
+            ("Toy:BE:32:default", b"\xd0\x00\xf5\x00\xa8\x00"),  # and r0, r0; callds 0x0; unimpl
+            ("sparc:BE:32:default", b"\x01\x00\x00\x00\x63\x74\x85\x96\xa7\xb8\xc9\xda"),  # nop; call; unimpl
+        ]:
+            with self.subTest(lang=lang):
+                ctx = Context(lang)
+                tx = ctx.translate(insns)
+                assert len(get_imarks(tx)) == 1
+
     def test_not_cached(self):
         ctx = Context("x86:LE:64:default")
         tx = ctx.translate(b"\xeb\xfe", 5)
